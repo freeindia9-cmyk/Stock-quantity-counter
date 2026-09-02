@@ -3,6 +3,7 @@ import pandas as pd
 import time
 from PIL import Image
 import json
+import re
 
 # 1. Page Configuration
 st.set_page_config(
@@ -12,10 +13,9 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 2. Fixed Dynamic Neon Cyberpunk Emerald Styling (High Contrast & Visible Buttons)
+# 2. Fixed Dynamic Neon Cyberpunk Emerald Styling
 st.markdown("""
 <style>
-    /* Dynamic Background */
     .stApp {
         background: linear-gradient(-45deg, #022c22, #042f2e, #0f172a, #065f46, #022c22);
         background-size: 400% 400%;
@@ -30,7 +30,6 @@ st.markdown("""
         100% { background-position: 0% 50%; }
     }
 
-    /* Header Title Glow */
     .floating-header {
         background: linear-gradient(90deg, #34d399, #06b6d4, #a7f3d0, #67e8f9, #34d399);
         background-size: 300% 300%;
@@ -45,7 +44,6 @@ st.markdown("""
         filter: drop-shadow(0 0 12px rgba(52, 211, 153, 0.6));
     }
 
-    /* Designer Badge */
     .designer-badge {
         display: inline-flex;
         align-items: center;
@@ -74,7 +72,6 @@ st.markdown("""
         box-shadow: 0 0 25px rgba(52, 211, 153, 0.7);
     }
 
-    /* Metric Cards */
     .metric-card {
         background: rgba(6, 78, 59, 0.6);
         border: 1.5px solid #34d399;
@@ -102,7 +99,6 @@ st.markdown("""
         -webkit-text-fill-color: transparent;
     }
 
-    /* MAIN ACTION BUTTON FIX */
     div.stButton > button {
         background: linear-gradient(135deg, #059669 0%, #0d9488 50%, #0284c7 100%) !important;
         color: #ffffff !important;
@@ -127,7 +123,6 @@ st.markdown("""
         transform: translateY(-2px) !important;
     }
 
-    /* FILE UPLOADER FULL STYLING FIX */
     [data-testid="stFileUploader"] section {
         background: rgba(4, 47, 46, 0.85) !important;
         border: 2px dashed #34d399 !important;
@@ -153,12 +148,6 @@ st.markdown("""
         box-shadow: 0 0 10px rgba(52, 211, 153, 0.3) !important;
     }
 
-    [data-testid="stFileUploader"] section button:hover {
-        background-color: #047857 !important;
-        border-color: #67e8f9 !important;
-        color: #ffffff !important;
-    }
-
     .image-preview-card {
         background: rgba(6, 78, 59, 0.45);
         border: 1.5px solid rgba(52, 211, 153, 0.4);
@@ -182,8 +171,8 @@ with st.sidebar:
     logo_file = st.file_uploader("Upload App Logo", type=["png", "jpg", "jpeg"])
     st.divider()
     st.markdown("<h3 class='section-title'>🤖 Vision AI Key</h3>", unsafe_allow_html=True)
-    gemini_api_key = st.text_input("Google Gemini API Key", type="password", help="Enter API Key for live OCR Batch No & Product Name reading.")
-    st.info("💡 **Ultra-Precise PCS Reading Active:** Reads Product Name, Batch Number, and exact Pcs missing.")
+    gemini_api_key = st.text_input("Google Gemini API Key", type="password", help="Enter API Key for live real OCR reading.")
+    st.info("💡 **Strict Document Matching Mode:** Reads full product list without skipping items.")
 
 # 4. Header Section
 col_logo, col_title = st.columns([1, 5])
@@ -241,139 +230,5 @@ with col_img2:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# 6. Meticulous PCS & Discrepancy Google Vision AI Engine
-def process_images_with_vision_ai(api_key, list_img, stock_img):
-    try:
-        from google import genai
-        client = genai.Client(api_key=api_key)
-        
-        strict_audit_prompt = """
-        You are an Ultra-High Precision Visual AI Stock Inspector specializing in Deep OCR & Item Matching.
-        Analyze Image 1 (Stock List/Invoice) and Image 2 (Physical Stock Photos).
-
-        CRITICAL SCANNING RULES:
-        1. Read Image 1 very carefully. Extract:
-           - Full Product Name
-           - Batch No / Lot No (if mentioned, else write 'N/A')
-           - Expected Quantity (in Pcs)
-        2. Scan Image 2 (Physical Goods Photo) visually with extreme accuracy to count how many actual Pcs/Boxes are physically present for each product.
-        3. Determine the Missing Pcs details:
-           - Missing Pcs = Expected Pcs - Found Pcs
-           - Specify "Missing Summary" clearly (e.g., "0 Pcs", "6 Pcs Short", "All 15 Pcs Missing").
-        4. Set "Audit Status":
-           - "✅ Fully Present" if Found == Expected
-           - "⚠️ Partial Shortage" if Found > 0 and Found < Expected
-           - "❌ Completely Missing" if Found == 0
-
-        FORMAT REQUIREMENT:
-        Return ONLY a raw JSON array of objects with EXACTLY these keys (do NOT wrap with ```json markdown):
-        [
-          {
-            "Product Name": "Paracetamol 500mg Strip",
-            "Batch No": "BTH-9012",
-            "Expected (Pcs)": 50,
-            "Found (Pcs)": 44,
-            "Missing Quantity": "6 Pcs Short",
-            "Audit Status": "⚠️ Partial Shortage"
-          }
-        ]
-        """
-        
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=[strict_audit_prompt, list_img, stock_img]
-        )
-        
-        clean_json = response.text.replace("```json", "").replace("```", "").strip()
-        data = json.loads(clean_json)
-        return pd.DataFrame(data)
-    except Exception as e:
-        st.error(f"⚠️ Live Vision AI Alert: {str(e)}. Falling back to local inspection engine.")
-        return None
-
-# 7. Verification Execution Trigger
-start_audit = st.button("🚀 Start AI Deep OCR & Missing Stock Verification", type="primary")
-
-if start_audit:
-    if not list_image_file or not stock_image_file:
-        st.warning("⚠️ Kripya dono photos (Stock List Image aur Physical Stock Photo) upload karein verification start karne ke liye!")
-    else:
-        st.markdown("---")
-        st.markdown("<h3 class='section-title'>🧠 Deep OCR Scanning & Pcs Tallying in Progress...</h3>", unsafe_allow_html=True)
-        
-        progress_bar = st.progress(0)
-        status_box = st.empty()
-        
-        steps = [
-            "Meticulously reading Product Names & Batch Nos from Document...",
-            "Counting physical pieces (Pcs) from Goods Photo...",
-            "Calculating precise missing pieces per product...",
-            "Building Detailed Discrepancy & Audit Report..."
-        ]
-        
-        for idx, step in enumerate(steps):
-            status_box.info(f"⚡ {step}")
-            progress_bar.progress((idx + 1) * 25)
-            time.sleep(0.4)
-
-        img_l = Image.open(list_image_file)
-        img_s = Image.open(stock_image_file)
-        
-        res_df = None
-        if gemini_api_key:
-            res_df = process_images_with_vision_ai(gemini_api_key, img_l, img_s)
-            
-        if res_df is None:
-            # High-Precision Default Analysis Dataset with Missing details & Pcs
-            audit_results = [
-                {"Product Name": "Paracetamol 500mg Strip", "Batch No": "BTH-9012", "Expected (Pcs)": 50, "Found (Pcs)": 50, "Missing Quantity": "0 Pcs", "Audit Status": "✅ Fully Present"},
-                {"Product Name": "Cough Syrup 100ml", "Batch No": "CS-4410", "Expected (Pcs)": 30, "Found (Pcs)": 24, "Missing Quantity": "6 Pcs Short", "Audit Status": "⚠️ Partial Shortage"},
-                {"Product Name": "Vitamin C Capsules", "Batch No": "VTC-8891", "Expected (Pcs)": 20, "Found (Pcs)": 20, "Missing Quantity": "0 Pcs", "Audit Status": "✅ Fully Present"},
-                {"Product Name": "Antiseptic Liquid 250ml", "Batch No": "ANT-1102", "Expected (Pcs)": 15, "Found (Pcs)": 0, "Missing Quantity": "15 Pcs Missing", "Audit Status": "❌ Completely Missing"},
-                {"Product Name": "Surgical Mask Box", "Batch No": "MK-2026A", "Expected (Pcs)": 100, "Found (Pcs)": 85, "Missing Quantity": "15 Pcs Short", "Audit Status": "⚠️ Partial Shortage"},
-                {"Product Name": "Hand Sanitizer 500ml", "Batch No": "HS-5521", "Expected (Pcs)": 40, "Found (Pcs)": 40, "Missing Quantity": "0 Pcs", "Audit Status": "✅ Fully Present"},
-                {"Product Name": "Pain Relief Gel 50g", "Batch No": "PRG-309", "Expected (Pcs)": 25, "Found (Pcs)": 20, "Missing Quantity": "5 Pcs Short", "Audit Status": "⚠️ Partial Shortage"},
-                {"Product Name": "Thermometer Digital", "Batch No": "TH-0012", "Expected (Pcs)": 12, "Found (Pcs)": 12, "Missing Quantity": "0 Pcs", "Audit Status": "✅ Fully Present"}
-            ]
-            res_df = pd.DataFrame(audit_results)
-
-        status_box.success("✅ Deep OCR & Missing Stock Audit Completed Successfully!")
-
-        total_items = len(res_df)
-        fully_present = len(res_df[res_df['Audit Status'].str.contains('Fully', case=False, na=False)])
-        partial_shortage = len(res_df[res_df['Audit Status'].str.contains('Partial', case=False, na=False)])
-        completely_missing = len(res_df[res_df['Audit Status'].str.contains('Missing', case=False, na=False)])
-
-        st.markdown("<h3 class='section-title'>📊 Visual Audit Summary Dashboard</h3>", unsafe_allow_html=True)
-        c1, c2, c3, c4 = st.columns(4)
-        
-        with c1:
-            st.markdown(f'<div class="metric-card"><div class="metric-title">Total Listed Products</div><div class="metric-value">{total_items}</div></div>', unsafe_allow_html=True)
-        with c2:
-            st.markdown(f'<div class="metric-card"><div class="metric-title">Fully Matched</div><div class="metric-value" style="color:#34d399;">{fully_present}</div></div>', unsafe_allow_html=True)
-        with c3:
-            st.markdown(f'<div class="metric-card"><div class="metric-title">Partial Shortage</div><div class="metric-value" style="color:#fbbf24;">{partial_shortage}</div></div>', unsafe_allow_html=True)
-        with c4:
-            st.markdown(f'<div class="metric-card"><div class="metric-title">Completely Missing</div><div class="metric-value" style="color:#f87171;">{completely_missing}</div></div>', unsafe_allow_html=True)
-
-        st.markdown("---")
-
-        st.markdown("<h3 class='section-title'>📑 Detailed Missing Quantity & Stock Discrepancy Report</h3>", unsafe_allow_html=True)
-        
-        def highlight_status(val):
-            if 'Missing' in str(val) or '❌' in str(val):
-                return 'background-color: rgba(239, 68, 68, 0.45); color: #fca5a5; font-weight: bold;'
-            elif 'Partial' in str(val) or '⚠️' in str(val):
-                return 'background-color: rgba(245, 158, 11, 0.45); color: #fde047; font-weight: bold;'
-            return 'background-color: rgba(16, 185, 129, 0.35); color: #6ee7b7; font-weight: bold;'
-
-        styled_df = res_df.style.map(highlight_status, subset=['Audit Status'])
-        st.dataframe(styled_df, use_container_width=True, height=380)
-
-# 8. Footer Signature
-st.markdown("""
-<br><hr style="border-top: 1px solid rgba(52, 211, 153, 0.3);"><br>
-<div style="text-align: center; color: #34d399; font-size: 16px; font-weight: 800; letter-spacing: 1.5px; text-shadow: 0 0 10px rgba(52, 211, 153, 0.5);">
-    ⚡ ARCHITECT & DESIGNER: <span style="color: #67e8f9; text-transform: uppercase;">RAJVEER</span>
-</div>
-""", unsafe_allow_html=True)
+# 6. Ultra-Accurate Gemini Vision AI Processing Engine
+def process_
