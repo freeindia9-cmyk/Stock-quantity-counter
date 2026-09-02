@@ -231,4 +231,129 @@ with col_img2:
 st.markdown("<br>", unsafe_allow_html=True)
 
 # 6. Ultra-Accurate Gemini Vision AI Processing Engine
-def process_
+def process_images_with_vision_ai(api_key, list_img, stock_img):
+    try:
+        from google import genai
+        client = genai.Client(api_key=api_key)
+        
+        strict_audit_prompt = """
+        You are an Expert Optical Character Recognition (OCR) and Physical Inventory Verification Specialist.
+        Analyze Image 1 (Stock List/Invoice Document) and Image 2 (Physical Goods Photo).
+
+        STRICT INSTRUCTIONS:
+        1. READ EVERY SINGLE ITEM listed in Image 1 from top to bottom. Do not omit, skip, or merge any product rows. Count every listed item accurately.
+        2. For EACH item in Image 1, extract:
+           - "Product Name": Exact full product title/description as written on the document.
+           - "Batch No": Extract the Batch / Lot Number if visible. If not specified, write "N/A".
+           - "Expected (Pcs)": Exact numerical quantity/pcs listed on Image 1.
+        3. Now check Image 2 (Physical Goods Photo):
+           - "Found (Pcs)": Count how many actual pieces/boxes for this exact product are visually visible in Image 2.
+        4. Calculate Discrepancy:
+           - "Missing Quantity": Subtract Found from Expected. Format as "X Pcs Short" or "0 Pcs" or "All X Pcs Missing".
+           - "Audit Status":
+             * "✅ Fully Present" (if Found == Expected)
+             * "⚠️ Partial Shortage" (if Found > 0 and Found < Expected)
+             * "❌ Completely Missing" (if Found == 0)
+
+        OUTPUT REQUIREMENT:
+        Return ONLY valid JSON format. An array of objects matching the exact keys:
+        [
+          {
+            "Product Name": "Exact Name From List",
+            "Batch No": "Batch Number or N/A",
+            "Expected (Pcs)": 10,
+            "Found (Pcs)": 8,
+            "Missing Quantity": "2 Pcs Short",
+            "Audit Status": "⚠️ Partial Shortage"
+          }
+        ]
+        Do not add any text, intro, or markdown code block formatting like ```json.
+        """
+        
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=[strict_audit_prompt, list_img, stock_img]
+        )
+        
+        raw_text = response.text.strip()
+        clean_json = re.sub(r'^```json\s*|^```\s*|\s*```$', '', raw_text, flags=re.MULTILINE).strip()
+        data = json.loads(clean_json)
+        return pd.DataFrame(data), None
+    except Exception as e:
+        return None, str(e)
+
+# 7. Verification Execution Trigger
+start_audit = st.button("🚀 Start AI Deep OCR & Missing Stock Verification", type="primary")
+
+if start_audit:
+    if not list_image_file or not stock_image_file:
+        st.warning("⚠️ Kripya dono photos (Stock List Image aur Physical Stock Photo) upload karein verification start karne ke liye!")
+    elif not gemini_api_key:
+        st.error("⚠️ Please enter your Google Gemini API Key in the sidebar to perform real-time OCR reading!")
+    else:
+        st.markdown("---")
+        st.markdown("<h3 class='section-title'>🧠 Real-Time Document Reading & Physical Stock OCR in Progress...</h3>", unsafe_allow_html=True)
+        
+        progress_bar = st.progress(0)
+        status_box = st.empty()
+        
+        steps = [
+            "Reading every single line and product name from the stock document...",
+            "Extracting exact Batch Numbers and expected quantities (Pcs)...",
+            "Cross-matching physical count from goods photo...",
+            "Calculating exact missing items & building table..."
+        ]
+        
+        for idx, step in enumerate(steps):
+            status_box.info(f"⚡ {step}")
+            progress_bar.progress((idx + 1) * 25)
+            time.sleep(0.3)
+
+        img_l = Image.open(list_image_file)
+        img_s = Image.open(stock_image_file)
+        
+        res_df, err_msg = process_images_with_vision_ai(gemini_api_key, img_l, img_s)
+            
+        if err_msg:
+            st.error(f"⚠️ OCR Reading Error: {err_msg}. Kripya Gemini API Key aur Image Quality check karein.")
+        elif res_df is not None and not res_df.empty:
+            status_box.success(f"✅ Real-Time OCR Completed! Successfully read {len(res_df)} listed products.")
+
+            total_items = len(res_df)
+            fully_present = len(res_df[res_df['Audit Status'].str.contains('Fully', case=False, na=False)])
+            partial_shortage = len(res_df[res_df['Audit Status'].str.contains('Partial', case=False, na=False)])
+            completely_missing = len(res_df[res_df['Audit Status'].str.contains('Missing', case=False, na=False)])
+
+            st.markdown("<h3 class='section-title'>📊 Visual Audit Summary Dashboard</h3>", unsafe_allow_html=True)
+            c1, c2, c3, c4 = st.columns(4)
+            
+            with c1:
+                st.markdown(f'<div class="metric-card"><div class="metric-title">Total Listed Products</div><div class="metric-value">{total_items}</div></div>', unsafe_allow_html=True)
+            with c2:
+                st.markdown(f'<div class="metric-card"><div class="metric-title">Fully Matched</div><div class="metric-value" style="color:#34d399;">{fully_present}</div></div>', unsafe_allow_html=True)
+            with c3:
+                st.markdown(f'<div class="metric-card"><div class="metric-title">Partial Shortage</div><div class="metric-value" style="color:#fbbf24;">{partial_shortage}</div></div>', unsafe_allow_html=True)
+            with c4:
+                st.markdown(f'<div class="metric-card"><div class="metric-title">Completely Missing</div><div class="metric-value" style="color:#f87171;">{completely_missing}</div></div>', unsafe_allow_html=True)
+
+            st.markdown("---")
+
+            st.markdown("<h3 class='section-title'>📑 Accurate Product Name, Batch No & Missing Stock Report</h3>", unsafe_allow_html=True)
+            
+            def highlight_status(val):
+                if 'Missing' in str(val) or '❌' in str(val):
+                    return 'background-color: rgba(239, 68, 68, 0.45); color: #fca5a5; font-weight: bold;'
+                elif 'Partial' in str(val) or '⚠️' in str(val):
+                    return 'background-color: rgba(245, 158, 11, 0.45); color: #fde047; font-weight: bold;'
+                return 'background-color: rgba(16, 185, 129, 0.35); color: #6ee7b7; font-weight: bold;'
+
+            styled_df = res_df.style.map(highlight_status, subset=['Audit Status'])
+            st.dataframe(styled_df, use_container_width=True, height=420)
+
+# 8. Footer Signature
+st.markdown("""
+<br><hr style="border-top: 1px solid rgba(52, 211, 153, 0.3);"><br>
+<div style="text-align: center; color: #34d399; font-size: 16px; font-weight: 800; letter-spacing: 1.5px; text-shadow: 0 0 10px rgba(52, 211, 153, 0.5);">
+    ⚡ ARCHITECT & DESIGNER: <span style="color: #67e8f9; text-transform: uppercase;">RAJVEER</span>
+</div>
+""", unsafe_allow_html=True)
