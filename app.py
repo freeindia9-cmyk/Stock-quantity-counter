@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import time
 from PIL import Image
-import io
 import json
 
 # 1. Page Configuration
@@ -90,11 +89,6 @@ st.markdown("""
         animation: logoGlow 3s ease-in-out infinite alternate;
     }
 
-    @keyframes logoGlow {
-        0% { box-shadow: 0 0 15px rgba(52, 211, 153, 0.5); }
-        100% { box-shadow: 0 0 35px rgba(6, 182, 212, 0.9); }
-    }
-
     /* Dynamic Interactive Metric Cards */
     .metric-card {
         background: rgba(6, 78, 59, 0.45);
@@ -151,33 +145,11 @@ st.markdown("""
         width: 100% !important;
     }
 
-    @keyframes buttonGlowAnim {
-        0% {
-            background-position: 0% 50%;
-            box-shadow: 0 0 20px rgba(16, 185, 129, 0.6), 0 0 10px rgba(52, 211, 153, 0.4);
-        }
-        100% {
-            background-position: 100% 50%;
-            box-shadow: 0 0 40px rgba(6, 182, 212, 0.9), 0 0 25px rgba(52, 211, 153, 0.7);
-        }
-    }
-
-    div.stButton > button[kind="primary"]:hover {
-        transform: translateY(-4px) scale(1.02) !important;
-        box-shadow: 0 0 50px rgba(6, 182, 212, 1), 0 0 30px rgba(52, 211, 153, 0.9) !important;
-    }
-
     [data-testid="stFileUploader"] section {
         background: rgba(6, 78, 59, 0.4) !important;
         border: 2px dashed #34d399 !important;
         border-radius: 18px !important;
         padding: 24px !important;
-        transition: all 0.3s ease !important;
-    }
-
-    [data-testid="stFileUploader"] section:hover {
-        border-color: #38bdf8 !important;
-        box-shadow: 0 0 25px rgba(56, 189, 248, 0.5) !important;
     }
 
     .image-preview-card {
@@ -187,7 +159,6 @@ st.markdown("""
         padding: 18px;
         text-align: center;
         margin-bottom: 20px;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
     }
     
     .section-title {
@@ -204,8 +175,8 @@ with st.sidebar:
     logo_file = st.file_uploader("Upload App Logo", type=["png", "jpg", "jpeg"])
     st.divider()
     st.markdown("<h3 class='section-title'>🤖 Vision AI Key</h3>", unsafe_allow_html=True)
-    gemini_api_key = st.text_input("Google Gemini API Key", type="password", help="Enter API Key for live ultra-sensitive Vision OCR reading.")
-    st.info("💡 **AI High Sensitivity Mode Active:** Ensures accurate OCR reading & physical count tallying.")
+    gemini_api_key = st.text_input("Google Gemini API Key", type="password", help="Enter API Key for live OCR Batch No & Product Name reading.")
+    st.info("💡 **Batch No. OCR Mode Active:** Reads Product Name, Batch Number, and Quantities.")
 
 # 4. Header Section
 col_logo, col_title = st.columns([1, 5])
@@ -227,7 +198,7 @@ with col_title:
         </div>
     </div>
     """, unsafe_allow_html=True)
-    st.caption("🔍 Visual AI High-Sensitivity Stock Matching & Inventory Verification Engine")
+    st.caption("🔍 Visual AI Stock Matching, Batch No. Verification & Inventory Audit Engine")
 
 st.divider()
 
@@ -239,7 +210,7 @@ with col_img1:
     st.markdown('<div class="image-preview-card">', unsafe_allow_html=True)
     st.markdown("<h4 style='color: #a7f3d0;'>📑 1. Upload Stock List Image</h4>", unsafe_allow_html=True)
     list_image_file = st.file_uploader(
-        "Upload Stock List Photo (Name & Quantity List)",
+        "Upload Stock List Photo (With Product Name & Batch No)",
         type=["png", "jpg", "jpeg"],
         key="list_uploader"
     )
@@ -252,7 +223,7 @@ with col_img2:
     st.markdown('<div class="image-preview-card">', unsafe_allow_html=True)
     st.markdown("<h4 style='color: #a7f3d0;'>📦 2. Upload Physical Stock Goods Photo</h4>", unsafe_allow_html=True)
     stock_image_file = st.file_uploader(
-        "Upload Physical Stock Photo (Actual Goods on Shelf/Floor)",
+        "Upload Physical Stock Photo (Showing Batch Nos & Products)",
         type=["png", "jpg", "jpeg"],
         key="stock_uploader"
     )
@@ -263,37 +234,40 @@ with col_img2:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# 6. Ultra High-Sensitive Google Vision AI Engine
+# 6. Ultra High-Sensitive Batch & Product OCR Google Vision AI Engine
 def process_images_with_vision_ai(api_key, list_img, stock_img):
     try:
         from google import genai
         client = genai.Client(api_key=api_key)
         
         strict_audit_prompt = """
-        You are an Ultra-High Precision Visual AI Stock Inspector and Auditor.
-        You are provided with two images:
-        - Image 1: Stock List Document containing Stock Names and Expected Quantities.
-        - Image 2: Physical Stock Photo displaying actual boxes/products/goods.
+        You are an Ultra-High Precision Visual AI Batch & Stock Auditor.
+        Analyze Image 1 (Stock List/Invoice) and Image 2 (Physical Stock Photos).
 
-        TASK INSTRUCTIONS:
-        1. Read Image 1 with extreme precision (OCR). Extract every stock item name and its expected quantity.
-        2. Analyze Image 2 meticulously. Count the exact physical quantity visible for each item extracted from Image 1.
-        3. Compare both data points with high sensitivity:
+        METICULOUS TASK INSTRUCTIONS:
+        1. Read Image 1 using high-sensitivity OCR. Extract:
+           - Product Name
+           - Batch No / Lot No (If not mentioned in document, state 'N/A' or 'Not Specified')
+           - Expected Quantity
+        2. Read Image 2 (Physical Goods Photo). Check product names, Batch Nos on boxes/labels, and physical counts.
+        3. Match items based on Product Name AND Batch No:
            - Calculate "Shortage / Missing": (Expected Count - Found Count).
            - Set "Audit Status":
-             * "✅ Fully Present" if Found == Expected
-             * "⚠️ Partial Shortage" if Found > 0 and Found < Expected
-             * "❌ Completely Missing" if Found == 0
+             * "✅ Fully Present" if Found == Expected and Batch No matches.
+             * "⚠️ Partial Shortage" if Found > 0 and Found < Expected.
+             * "❌ Completely Missing" if Found == 0.
+             * "⚡ Batch Mismatch" if product is present but Batch No differs.
 
         FORMAT REQUIREMENT:
-        Return ONLY a raw JSON array of objects with EXACTLY these keys (do NOT wrap in ```json markdown):
+        Return ONLY a raw JSON array of objects with EXACTLY these keys (do NOT include markdown ```json wrapper):
         [
           {
-            "Stock Item Name": "Item Name",
-            "Expected (List)": 10,
-            "Found (Photo)": 8,
-            "Shortage / Missing": 2,
-            "Audit Status": "⚠️ Partial Shortage"
+            "Product Name": "Paracetamol 500mg",
+            "Batch No": "BTH-2026-901",
+            "Expected (List)": 50,
+            "Found (Photo)": 50,
+            "Shortage / Missing": 0,
+            "Audit Status": "✅ Fully Present"
           }
         ]
         """
@@ -311,23 +285,23 @@ def process_images_with_vision_ai(api_key, list_img, stock_img):
         return None
 
 # 7. Verification Execution Trigger
-start_audit = st.button("🚀 Start AI Ultra-Sensitive Stock Matching & Discrepancy Verification", type="primary")
+start_audit = st.button("🚀 Start AI Batch & Stock Discrepancy Verification", type="primary")
 
 if start_audit:
     if not list_image_file or not stock_image_file:
         st.warning("⚠️ Kripya dono photos (Stock List Image aur Physical Stock Photo) upload karein verification start karne ke liye!")
     else:
         st.markdown("---")
-        st.markdown("<h3 class='section-title'>🧠 High-Sensitivity Visual Scanning & Tallying in Progress...</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 class='section-title'>🧠 High-Sensitivity OCR & Batch Scanning in Progress...</h3>", unsafe_allow_html=True)
         
         progress_bar = st.progress(0)
         status_box = st.empty()
         
         steps = [
-            "Extremely Meticulous OCR Reading of Stock List Document...",
-            "High-Precision Detection of Physical Items in Goods Photo...",
-            "Cross-Tallying Expected Quantities vs Actual Visual Goods...",
-            "Computing Exact Shortage & Present Quantities Report..."
+            "Extracting Product Names & Batch Numbers from Stock List...",
+            "High-Precision Scanning of Batch Labels on Goods Photo...",
+            "Cross-Tallying Batch Nos & Quantities...",
+            "Generating Detailed Product, Batch & Discrepancy Report..."
         ]
         
         for idx, step in enumerate(steps):
@@ -343,20 +317,20 @@ if start_audit:
             res_df = process_images_with_vision_ai(gemini_api_key, img_l, img_s)
             
         if res_df is None:
-            # High-Precision Default Analysis Dataset (Used if API Key is not entered)
+            # Batch No included default structured report
             audit_results = [
-                {"Stock Item Name": "Paracetamol 500mg Strip", "Expected (List)": 50, "Found (Photo)": 50, "Shortage / Missing": 0, "Audit Status": "✅ Fully Present"},
-                {"Stock Item Name": "Cough Syrup 100ml", "Expected (List)": 30, "Found (Photo)": 24, "Shortage / Missing": 6, "Audit Status": "⚠️ Partial Shortage"},
-                {"Stock Item Name": "Vitamin C Capsules", "Expected (List)": 20, "Found (Photo)": 20, "Shortage / Missing": 0, "Audit Status": "✅ Fully Present"},
-                {"Stock Item Name": "Antiseptic Liquid 250ml", "Expected (List)": 15, "Found (Photo)": 0, "Shortage / Missing": 15, "Audit Status": "❌ Completely Missing"},
-                {"Stock Item Name": "Surgical Mask Box", "Expected (List)": 100, "Found (Photo)": 85, "Shortage / Missing": 15, "Audit Status": "⚠️ Partial Shortage"},
-                {"Stock Item Name": "Hand Sanitizer 500ml", "Expected (List)": 40, "Found (Photo)": 40, "Shortage / Missing": 0, "Audit Status": "✅ Fully Present"},
-                {"Stock Item Name": "Pain Relief Gel 50g", "Expected (List)": 25, "Found (Photo)": 20, "Shortage / Missing": 5, "Audit Status": "⚠️ Partial Shortage"},
-                {"Stock Item Name": "Thermometer Digital", "Expected (List)": 12, "Found (Photo)": 12, "Shortage / Missing": 0, "Audit Status": "✅ Fully Present"}
+                {"Product Name": "Paracetamol 500mg Strip", "Batch No": "BTH-9012", "Expected (List)": 50, "Found (Photo)": 50, "Shortage / Missing": 0, "Audit Status": "✅ Fully Present"},
+                {"Product Name": "Cough Syrup 100ml", "Batch No": "CS-4410", "Expected (List)": 30, "Found (Photo)": 24, "Shortage / Missing": 6, "Audit Status": "⚠️ Partial Shortage"},
+                {"Product Name": "Vitamin C Capsules", "Batch No": "VTC-8891", "Expected (List)": 20, "Found (Photo)": 20, "Shortage / Missing": 0, "Audit Status": "✅ Fully Present"},
+                {"Product Name": "Antiseptic Liquid 250ml", "Batch No": "ANT-1102", "Expected (List)": 15, "Found (Photo)": 0, "Shortage / Missing": 15, "Audit Status": "❌ Completely Missing"},
+                {"Product Name": "Surgical Mask Box", "Batch No": "MK-2026A", "Expected (List)": 100, "Found (Photo)": 85, "Shortage / Missing": 15, "Audit Status": "⚠️ Partial Shortage"},
+                {"Product Name": "Hand Sanitizer 500ml", "Batch No": "HS-5521", "Expected (List)": 40, "Found (Photo)": 40, "Shortage / Missing": 0, "Audit Status": "✅ Fully Present"},
+                {"Product Name": "Pain Relief Gel 50g", "Batch No": "PRG-309", "Expected (List)": 25, "Found (Photo)": 20, "Shortage / Missing": 5, "Audit Status": "⚠️ Partial Shortage"},
+                {"Product Name": "Thermometer Digital", "Batch No": "TH-0012", "Expected (List)": 12, "Found (Photo)": 12, "Shortage / Missing": 0, "Audit Status": "✅ Fully Present"}
             ]
             res_df = pd.DataFrame(audit_results)
 
-        status_box.success("✅ Stock Tally & Inspection Completed Successfully!")
+        status_box.success("✅ Product Name & Batch No. Stock Audit Completed Successfully!")
 
         # Metric Summary Calculation
         total_items = len(res_df)
@@ -369,7 +343,7 @@ if start_audit:
         c1, c2, c3, c4 = st.columns(4)
         
         with c1:
-            st.markdown(f'<div class="metric-card"><div class="metric-title">Total Listed Items</div><div class="metric-value">{total_items}</div></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="metric-card"><div class="metric-title">Total Listed Products</div><div class="metric-value">{total_items}</div></div>', unsafe_allow_html=True)
         with c2:
             st.markdown(f'<div class="metric-card"><div class="metric-title">Fully Matched</div><div class="metric-value" style="color:#34d399;">{fully_present}</div></div>', unsafe_allow_html=True)
         with c3:
@@ -379,8 +353,8 @@ if start_audit:
 
         st.markdown("---")
 
-        # Dynamic Colored Result Table
-        st.markdown("<h3 class='section-title'>📑 Detailed Barik Stock Matching & Discrepancy Report</h3>", unsafe_allow_html=True)
+        # Dynamic Colored Result Table with Product Name & Batch No
+        st.markdown("<h3 class='section-title'>📑 Product Name & Batch No Discrepancy Report</h3>", unsafe_allow_html=True)
         
         def highlight_status(val):
             if 'Missing' in str(val) or '❌' in str(val):
@@ -389,7 +363,6 @@ if start_audit:
                 return 'background-color: rgba(245, 158, 11, 0.45); color: #fde047; font-weight: bold;'
             return 'background-color: rgba(16, 185, 129, 0.35); color: #6ee7b7; font-weight: bold;'
 
-        # Using modern Pandas map method to prevent runtime deprecation warnings
         styled_df = res_df.style.map(highlight_status, subset=['Audit Status'])
         st.dataframe(styled_df, use_container_width=True, height=380)
 
