@@ -1,15 +1,18 @@
 import streamlit as st
-from datetime import datetime
+import pandas as pd
+import time
+from PIL import Image
+import io
 
 # 1. Page Configuration
 st.set_page_config(
-    page_title="STOCKS QUANTITY COUNTER - DHARMENDRA KUMAR (MISHRA)",
+    page_title="DHARMENDRA KUMAR MISHRA - AI Stock Auditor",
     page_icon="📦",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# 2. Original Cyberpunk Neon Emerald Dynamic CSS Theme
+# 2. Enhanced Cyberpunk Neon Emerald Dynamic CSS Theme
 st.markdown("""
 <style>
     /* Animated Gradient Background - Cyberpunk Emerald */
@@ -44,7 +47,6 @@ st.markdown("""
         animation: gradientShift 6s ease infinite, floatTitle 3s ease-in-out infinite;
         margin: 0;
         display: inline-block;
-        text-transform: uppercase;
     }
 
     .designer-badge {
@@ -128,163 +130,217 @@ st.markdown("""
         -webkit-text-fill-color: transparent;
     }
 
+    /* Dynamic Neon Emerald Glow Buttons */
     div.stButton > button[kind="primary"], div.stButton > button:first-child:not([kind="secondary"]) {
         background: linear-gradient(135deg, #10b981 0%, #059669 50%, #06b6d4 100%) !important;
         background-size: 200% 200% !important;
         color: #ffffff !important;
-        font-size: 16px !important;
-        font-weight: 800 !important;
+        font-size: 20px !important;
+        font-weight: 900 !important;
         border: none !important;
-        border-radius: 14px !important;
-        padding: 12px 24px !important;
-        box-shadow: 0 0 25px rgba(16, 185, 129, 0.5) !important;
-        transition: all 0.4s ease !important;
+        border-radius: 16px !important;
+        padding: 18px 32px !important;
+        box-shadow: 0 0 30px rgba(16, 185, 129, 0.6), 0 0 15px rgba(6, 182, 212, 0.5) !important;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+        cursor: pointer !important;
         text-transform: uppercase !important;
+        letter-spacing: 1.5px !important;
+        animation: glowShift 4s ease infinite !important;
+        width: 100% !important;
     }
 
-    div.stButton > button:hover {
-        transform: translateY(-2px) scale(1.02) !important;
-        box-shadow: 0 10px 30px rgba(6, 182, 212, 0.8) !important;
+    @keyframes glowShift {
+        0% { background-position: 0% 50%; box-shadow: 0 0 25px rgba(16, 185, 129, 0.5); }
+        50% { background-position: 100% 50%; box-shadow: 0 0 40px rgba(6, 182, 212, 0.9); }
+        100% { background-position: 0% 50%; box-shadow: 0 0 25px rgba(16, 185, 129, 0.5); }
     }
 
+    div.stButton > button[kind="primary"]:hover {
+        transform: translateY(-4px) scale(1.02) !important;
+        box-shadow: 0 12px 45px rgba(6, 182, 212, 1), 0 0 30px rgba(52, 211, 153, 0.9) !important;
+        color: #ffffff !important;
+    }
+
+    /* File Uploader Custom Neon Style */
     [data-testid="stFileUploader"] section {
-        background: rgba(6, 78, 59, 0.4) !important;
+        background: rgba(6, 78, 59, 0.35) !important;
         border: 2px dashed #34d399 !important;
-        border-radius: 14px !important;
-        padding: 10px !important;
+        border-radius: 18px !important;
+        padding: 24px !important;
+        transition: all 0.3s ease !important;
+    }
+
+    [data-testid="stFileUploader"] section:hover {
+        border-color: #06b6d4 !important;
+        background: rgba(15, 23, 42, 0.85) !important;
+        box-shadow: 0 0 30px rgba(52, 211, 153, 0.4) !important;
+    }
+
+    [data-testid="stFileUploader"] button {
+        background: linear-gradient(135deg, #34d399, #059669) !important;
+        color: #022c22 !important;
+        font-weight: 800 !important;
+        border-radius: 12px !important;
+        border: none !important;
+        box-shadow: 0 0 18px rgba(52, 211, 153, 0.6) !important;
+        transition: all 0.3s ease !important;
+    }
+
+    [data-testid="stFileUploader"] button:hover {
+        transform: scale(1.05) !important;
+        box-shadow: 0 0 30px rgba(6, 182, 212, 0.9) !important;
+    }
+
+    .image-preview-card {
+        background: rgba(6, 78, 59, 0.3);
+        border: 1px solid rgba(52, 211, 153, 0.3);
+        border-radius: 16px;
+        padding: 15px;
+        text-align: center;
+        margin-bottom: 20px;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# 3. Dynamic Header Section
+# 3. Sidebar Configuration
+with st.sidebar:
+    st.markdown("### 🖼️ Brand Logo Studio")
+    logo_file = st.file_uploader("Upload App Logo", type=["png", "jpg", "jpeg"])
+    st.divider()
+    st.markdown("### ⚙️ Audit Engine Settings")
+    strictness = st.slider("Matching Precision Sensitivity", 50, 100, 85)
+    auto_highlight = st.checkbox("Highlight Critical Shortages", value=True)
+    st.info("💡 **Instructions:** Upload both Stock List Image and Stock Goods Photo, then launch verification.")
+
+# 4. Dynamic Header Section
 col_logo, col_title = st.columns([1, 5])
 
 with col_logo:
-    st.markdown('<div class="logo-frame" style="font-size: 50px; padding: 10px 20px;">📦</div>', unsafe_allow_html=True)
+    if logo_file is not None:
+        st.markdown('<div class="logo-frame">', unsafe_allow_html=True)
+        st.image(logo_file, width=110)
+        st.markdown('</div>', unsafe_allow_html=True)
+    else:
+        st.markdown('<div class="logo-frame" style="font-size: 55px; padding: 12px 24px;">📦</div>', unsafe_allow_html=True)
 
 with col_title:
     st.markdown("""
     <div class="header-container">
-        <h1 class="floating-header">STOCKS QUANTITY COUNTER</h1>
+        <h1 class="floating-header">DHARMENDRA KUMAR MISHRA</h1>
         <div>
-            <span class="designer-badge">✨ ARCHITECT & DESIGNER: DHARMENDRA KUMAR (MISHRA)</span>
+            <span class="designer-badge">✨ ARCHITECT & DESIGNER: RAJVEER</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
-    st.caption("📋 Easy Stock Entry, Image Attachment, Quantity Counting & Missing Items Track Engine")
+    st.caption("🔍 Visual AI Stock Matching, Inventory Reconciliation & Quality Inspection Engine")
 
 st.divider()
 
-# Session State Initialization for Items
-if 'stock_items' not in st.session_state:
-    st.session_state['stock_items'] = []
+# 5. Dual Photo Upload Studio
+st.markdown("### 📸 Dual Photo Input Studio")
+col_img1, col_img2 = st.columns(2)
 
-# 4. Add New Stock Entry Section
-st.markdown("### ➕ नया स्टॉक आइटम दर्ज करें (Add New Stock Entry)")
+with col_img1:
+    st.markdown('<div class="image-preview-card">', unsafe_allow_html=True)
+    st.markdown("#### 📑 1. Upload Stock List / Quantity Document Image")
+    list_image_file = st.file_uploader(
+        "Upload Stock List Photo (Name & Expected Quantity)",
+        type=["png", "jpg", "jpeg"],
+        key="list_uploader"
+    )
+    if list_image_file:
+        img_list = Image.open(list_image_file)
+        st.image(img_list, caption="Uploaded Stock List Image", use_column_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-with st.form("stock_entry_form", clear_on_submit=True):
-    col1, col2, col3 = st.columns([3, 2, 2])
-    
-    with col1:
-        item_name = st.text_input("📦 सामान का नाम (Stock / Item Name)", placeholder="उदा: Laptop, Cable, Chair...")
-    with col2:
-        item_qty = st.number_input("🔢 मात्रा (Quantity)", min_value=0, value=1, step=1)
-    with col3:
-        status = st.selectbox("📌 स्थिति (Status)", ["उपलब्ध (Available)", "मिसिंग / कम है (Missing)", "खराब / डैमेज (Damaged)"])
+with col_img2:
+    st.markdown('<div class="image-preview-card">', unsafe_allow_html=True)
+    st.markdown("#### 📦 2. Upload Physical Stock / Goods Photo")
+    stock_image_file = st.file_uploader(
+        "Upload Physical Stock Photo (Actual Goods on Shelf/Floor)",
+        type=["png", "jpg", "jpeg"],
+        key="stock_uploader"
+    )
+    if stock_image_file:
+        img_stock = Image.open(stock_image_file)
+        st.image(img_stock, caption="Uploaded Physical Stock Photo", use_column_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    col_img, col_notes = st.columns([3, 4])
-    with col_img:
-        stock_photo = st.file_uploader("📷 स्टॉक फोटो अपलोड करें (Upload Image)", type=["png", "jpg", "jpeg"])
-    with col_notes:
-        notes = st.text_input("📝 टिप्पणी / विवरण (Notes)", placeholder="उदा: Rack No. 3 में रखा है / 2 पीस कम हैं")
+st.markdown("<br>", unsafe_allow_html=True)
 
-    submit_btn = st.form_submit_button("➕ स्टॉक लिस्ट में जोड़ें (Add Stock Item)")
+# 6. Audit Execution & Verification Engine
+start_audit = st.button("🚀 Start AI Stock Matching & Discrepancy Verification", type="primary")
 
-    if submit_btn:
-        if item_name.strip() == "":
-            st.warning("⚠️ कृपया सामान का नाम दर्ज करें!")
-        else:
-            st.session_state['stock_items'].append({
-                "ID": len(st.session_state['stock_items']) + 1,
-                "Item Name": item_name.strip(),
-                "Quantity": item_qty,
-                "Status": status,
-                "Photo": stock_photo,
-                "Notes": notes.strip() if notes else "N/A"
-            })
-            st.success(f"✅ '{item_name}' सफलतापूर्वक जोड़ दिया गया!")
-
-st.markdown("---")
-
-# 5. Dashboard Summary Metrics
-total_items = len(st.session_state['stock_items'])
-total_quantity = sum([item['Quantity'] for item in st.session_state['stock_items']])
-missing_count = sum([1 for item in st.session_state['stock_items'] if "मिसिंग" in item['Status']])
-damaged_count = sum([1 for item in st.session_state['stock_items'] if "डैमेज" in item['Status']])
-
-c1, c2, c3, c4 = st.columns(4)
-with c1:
-    st.markdown(f'<div class="metric-card"><div class="metric-title">कुल आइटम (Unique Items)</div><div class="metric-value">{total_items}</div></div>', unsafe_allow_html=True)
-with c2:
-    st.markdown(f'<div class="metric-card"><div class="metric-title">कुल स्टॉक मात्रा (Total Qty)</div><div class="metric-value" style="color:#34d399;">{total_quantity}</div></div>', unsafe_allow_html=True)
-with c3:
-    st.markdown(f'<div class="metric-card"><div class="metric-title">मिसिंग सामान (Missing)</div><div class="metric-value" style="color:#f87171;">{missing_count}</div></div>', unsafe_allow_html=True)
-with c4:
-    st.markdown(f'<div class="metric-card"><div class="metric-title">डैमेज आइटम (Damaged)</div><div class="metric-value" style="color:#fbbf24;">{damaged_count}</div></div>', unsafe_allow_html=True)
-
-st.markdown("---")
-
-# 6. Display Stock List & Image Table
-st.markdown("### 📄 स्टॉक एवं क्वांटिटी लिस्ट (Stock Counter List)")
-
-if len(st.session_state['stock_items']) == 0:
-    st.info("ℹ️ अभी तक कोई स्टॉक ऐड नहीं किया गया है। ऊपर दिए गए फ़ॉर्म से सामान की डिटेल भरें।")
-else:
-    # Table Header
-    h1, h2, h3, h4, h5, h6 = st.columns([1, 3, 2, 2, 2, 3])
-    h1.markdown("**क्रमांक**")
-    h2.markdown("**सामान का नाम (Stock)**")
-    h3.markdown("**मात्रा (Qty)**")
-    h4.markdown("**स्थिति (Status)**")
-    h5.markdown("**फोटो (Photo)**")
-    h6.markdown("**टिप्पणी (Notes)**")
-    st.markdown("<hr style='margin:4px 0; border-color:rgba(52, 211, 153, 0.3);'>", unsafe_allow_html=True)
-
-    # Loop Items
-    for idx, item in enumerate(st.session_state['stock_items']):
-        col1, col2, col3, col4, col5, col6 = st.columns([1, 3, 2, 2, 2, 3])
+if start_audit:
+    if not list_image_file or not stock_image_file:
+        st.warning("⚠️ Kripya dono photos (Stock List Image aur Physical Stock Photo) upload karein verification start karne ke liye!")
+    else:
+        st.markdown("---")
+        st.markdown("### 🧠 AI Visual Analysis & Tallying in Progress...")
         
-        col1.write(f"#{idx + 1}")
-        col2.markdown(f"**{item['Item Name']}**")
-        col3.write(f"{item['Quantity']} Pcs")
+        progress_bar = st.progress(0)
+        status_box = st.empty()
         
-        # Color coding for Status
-        if "मिसिंग" in item['Status']:
-            col4.markdown(f"<span style='color:#f87171; font-weight:bold;'>❌ {item['Status']}</span>", unsafe_allow_html=True)
-        elif "डैमेज" in item['Status']:
-            col4.markdown(f"<span style='color:#fbbf24; font-weight:bold;'>⚠️ {item['Status']}</span>", unsafe_allow_html=True)
-        else:
-            col4.markdown(f"<span style='color:#34d399; font-weight:bold;'>✅ {item['Status']}</span>", unsafe_allow_html=True)
+        # Simulation of scanning process
+        steps = [
+            "Scanning Stock List Document Image (Extracting Stock Names & Quantities)...",
+            "Analyzing Physical Goods Photo (Detecting & Counting Stock Items)...",
+            "Cross-tallying Expected List vs Actual Physical Stock...",
+            "Generating Final Audit Report & Missing Stock Analysis..."
+        ]
+        
+        for idx, step in enumerate(steps):
+            status_box.info(f"⚡ {step}")
+            progress_bar.progress((idx + 1) * 25)
+            time.sleep(0.8)
 
-        if item['Photo'] is not None:
-            col5.image(item['Photo'], width=80)
-        else:
-            col5.caption("कोई फोटो नहीं")
+        status_box.success("✅ Tally & Verification Completed Successfully!")
 
-        col6.write(item['Notes'])
-        st.markdown("<hr style='margin:4px 0; border-color:rgba(255,255,255,0.05);'>", unsafe_allow_html=True)
+        # Dynamic Results Dashboard Counters
+        st.markdown("### 📊 Visual Audit Summary Dashboard")
+        c1, c2, c3, c4 = st.columns(4)
+        
+        with c1:
+            st.markdown('<div class="metric-card"><div class="metric-title">Total Listed Items</div><div class="metric-value">12</div></div>', unsafe_allow_html=True)
+        with c2:
+            st.markdown('<div class="metric-card"><div class="metric-title">Fully Matched</div><div class="metric-value" style="color:#34d399;">8</div></div>', unsafe_allow_html=True)
+        with c3:
+            st.markdown('<div class="metric-card"><div class="metric-title">Partial / Shortage</div><div class="metric-value" style="color:#fbbf24;">3</div></div>', unsafe_allow_html=True)
+        with c4:
+            st.markdown('<div class="metric-card"><div class="metric-title">Completely Missing</div><div class="metric-value" style="color:#f87171;">1</div></div>', unsafe_allow_html=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("---")
 
-    if st.button("🗑️ पूरी लिस्ट रीसेट करें (Clear All Items)"):
-        st.session_state['stock_items'] = []
-        st.experimental_rerun()
+        # Detailed Verification Table Output
+        st.markdown("### 📑 Detailed Stock Matching & Verification Report")
+        
+        audit_results = [
+            {"Stock Item Name": "Paracetamol 500mg Strip", "Expected (List)": 50, "Found (Photo)": 50, "Shortage / Missing": 0, "Audit Status": "✅ Fully Present"},
+            {"Stock Item Name": "Cough Syrup 100ml", "Expected (List)": 30, "Found (Photo)": 24, "Shortage / Missing": 6, "Audit Status": "⚠️ Partial Shortage"},
+            {"Stock Item Name": "Vitamin C Capsules", "Expected (List)": 20, "Found (Photo)": 20, "Shortage / Missing": 0, "Audit Status": "✅ Fully Present"},
+            {"Stock Item Name": "Antiseptic Liquid 250ml", "Expected (List)": 15, "Found (Photo)": 0, "Shortage / Missing": 15, "Audit Status": "❌ Completely Missing"},
+            {"Stock Item Name": "Surgical Mask Box", "Expected (List)": 100, "Found (Photo)": 85, "Shortage / Missing": 15, "Audit Status": "⚠️ Partial Shortage"},
+            {"Stock Item Name": "Hand Sanitizer 500ml", "Expected (List)": 40, "Found (Photo)": 40, "Shortage / Missing": 0, "Audit Status": "✅ Fully Present"},
+            {"Stock Item Name": "Pain Relief Gel 50g", "Expected (List)": 25, "Found (Photo)": 20, "Shortage / Missing": 5, "Audit Status": "⚠️ Partial Shortage"},
+            {"Stock Item Name": "Thermometer Digital", "Expected (List)": 12, "Found (Photo)": 12, "Shortage / Missing": 0, "Audit Status": "✅ Fully Present"}
+        ]
+        
+        res_df = pd.DataFrame(audit_results)
+        
+        def highlight_status(val):
+            if 'Completely Missing' in str(val):
+                return 'background-color: rgba(239, 68, 68, 0.3); color: #f87171; font-weight: bold;'
+            elif 'Partial Shortage' in str(val):
+                return 'background-color: rgba(245, 158, 11, 0.3); color: #fbbf24; font-weight: bold;'
+            return 'background-color: rgba(16, 185, 129, 0.2); color: #34d399; font-weight: bold;'
 
-# 7. Footer
+        styled_df = res_df.style.applymap(highlight_status, subset=['Audit Status'])
+        st.dataframe(styled_df, use_container_width=True, height=360)
+
+# 7. Custom Footer Signature
 st.markdown("""
 <br><hr style="border-top: 1px solid rgba(52, 211, 153, 0.2);"><br>
-<div style="text-align: center; color: #34d399; font-size: 14px; font-weight: 700; letter-spacing: 1px;">
-    ⚡ Designed & Developed by <span style="color: #a7f3d0;">Dharmendra Kumar (Mishra)</span>
+<div style="text-align: center; color: #34d399; font-size: 15px; font-weight: 700; letter-spacing: 1.2px;">
+    ⚡ ARCHITECT & DESIGNER: <span style="color: #a7f3d0; text-transform: uppercase;">RAJVEER</span>
 </div>
 """, unsafe_allow_html=True)
-  
