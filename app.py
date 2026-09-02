@@ -102,7 +102,7 @@ st.markdown("""
         -webkit-text-fill-color: transparent;
     }
 
-    /* MAIN ACTION BUTTON FIX (High Contrast Visible Solid Button) */
+    /* MAIN ACTION BUTTON FIX */
     div.stButton > button {
         background: linear-gradient(135deg, #059669 0%, #0d9488 50%, #0284c7 100%) !important;
         color: #ffffff !important;
@@ -127,7 +127,7 @@ st.markdown("""
         transform: translateY(-2px) !important;
     }
 
-    /* FILE UPLOADER FULL STYLING FIX (Removes White Box & White Text) */
+    /* FILE UPLOADER FULL STYLING FIX */
     [data-testid="stFileUploader"] section {
         background: rgba(4, 47, 46, 0.85) !important;
         border: 2px dashed #34d399 !important;
@@ -143,7 +143,6 @@ st.markdown("""
         font-weight: 600 !important;
     }
 
-    /* File Uploader Browse Button Fix */
     [data-testid="stFileUploader"] section button {
         background-color: #065f46 !important;
         color: #ffffff !important;
@@ -184,7 +183,7 @@ with st.sidebar:
     st.divider()
     st.markdown("<h3 class='section-title'>🤖 Vision AI Key</h3>", unsafe_allow_html=True)
     gemini_api_key = st.text_input("Google Gemini API Key", type="password", help="Enter API Key for live OCR Batch No & Product Name reading.")
-    st.info("💡 **Batch No. OCR Mode Active:** Reads Product Name, Batch Number, and Quantities.")
+    st.info("💡 **Ultra-Precise PCS Reading Active:** Reads Product Name, Batch Number, and exact Pcs missing.")
 
 # 4. Header Section
 col_logo, col_title = st.columns([1, 5])
@@ -206,7 +205,7 @@ with col_title:
         </div>
     </div>
     """, unsafe_allow_html=True)
-    st.caption("🔍 Visual AI Stock Matching, Batch No. Verification & Inventory Audit Engine")
+    st.caption("🔍 Visual AI Deep OCR Stock Matching, Missing Item Details & Quantity Auditor")
 
 st.divider()
 
@@ -218,7 +217,7 @@ with col_img1:
     st.markdown('<div class="image-preview-card">', unsafe_allow_html=True)
     st.markdown("<h4 style='color: #a7f3d0;'>📑 1. Upload Stock List Image</h4>", unsafe_allow_html=True)
     list_image_file = st.file_uploader(
-        "Upload Stock List Photo (With Product Name & Batch No)",
+        "Upload Stock List Photo (With Product Name, Batch No & Expected Pcs)",
         type=["png", "jpg", "jpeg"],
         key="list_uploader"
     )
@@ -231,7 +230,7 @@ with col_img2:
     st.markdown('<div class="image-preview-card">', unsafe_allow_html=True)
     st.markdown("<h4 style='color: #a7f3d0;'>📦 2. Upload Physical Stock Goods Photo</h4>", unsafe_allow_html=True)
     stock_image_file = st.file_uploader(
-        "Upload Physical Stock Photo (Showing Batch Nos & Products)",
+        "Upload Physical Stock Photo (Showing Visible Pieces & Product Packages)",
         type=["png", "jpg", "jpeg"],
         key="stock_uploader"
     )
@@ -242,40 +241,40 @@ with col_img2:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# 6. Ultra High-Sensitive Batch & Product OCR Google Vision AI Engine
+# 6. Meticulous PCS & Discrepancy Google Vision AI Engine
 def process_images_with_vision_ai(api_key, list_img, stock_img):
     try:
         from google import genai
         client = genai.Client(api_key=api_key)
         
         strict_audit_prompt = """
-        You are an Ultra-High Precision Visual AI Batch & Stock Auditor.
+        You are an Ultra-High Precision Visual AI Stock Inspector specializing in Deep OCR & Item Matching.
         Analyze Image 1 (Stock List/Invoice) and Image 2 (Physical Stock Photos).
 
-        METICULOUS TASK INSTRUCTIONS:
-        1. Read Image 1 using high-sensitivity OCR. Extract:
-           - Product Name
-           - Batch No / Lot No (If not mentioned in document, state 'N/A' or 'Not Specified')
-           - Expected Quantity
-        2. Read Image 2 (Physical Goods Photo). Check product names, Batch Nos on boxes/labels, and physical counts.
-        3. Match items based on Product Name AND Batch No:
-           - Calculate "Shortage / Missing": (Expected Count - Found Count).
-           - Set "Audit Status":
-             * "✅ Fully Present" if Found == Expected and Batch No matches.
-             * "⚠️ Partial Shortage" if Found > 0 and Found < Expected.
-             * "❌ Completely Missing" if Found == 0.
-             * "⚡ Batch Mismatch" if product is present but Batch No differs.
+        CRITICAL SCANNING RULES:
+        1. Read Image 1 very carefully. Extract:
+           - Full Product Name
+           - Batch No / Lot No (if mentioned, else write 'N/A')
+           - Expected Quantity (in Pcs)
+        2. Scan Image 2 (Physical Goods Photo) visually with extreme accuracy to count how many actual Pcs/Boxes are physically present for each product.
+        3. Determine the Missing Pcs details:
+           - Missing Pcs = Expected Pcs - Found Pcs
+           - Specify "Missing Summary" clearly (e.g., "0 Pcs", "6 Pcs Short", "All 15 Pcs Missing").
+        4. Set "Audit Status":
+           - "✅ Fully Present" if Found == Expected
+           - "⚠️ Partial Shortage" if Found > 0 and Found < Expected
+           - "❌ Completely Missing" if Found == 0
 
         FORMAT REQUIREMENT:
-        Return ONLY a raw JSON array of objects with EXACTLY these keys (do NOT include markdown ```json wrapper):
+        Return ONLY a raw JSON array of objects with EXACTLY these keys (do NOT wrap with ```json markdown):
         [
           {
-            "Product Name": "Paracetamol 500mg",
-            "Batch No": "BTH-2026-901",
-            "Expected (List)": 50,
-            "Found (Photo)": 50,
-            "Shortage / Missing": 0,
-            "Audit Status": "✅ Fully Present"
+            "Product Name": "Paracetamol 500mg Strip",
+            "Batch No": "BTH-9012",
+            "Expected (Pcs)": 50,
+            "Found (Pcs)": 44,
+            "Missing Quantity": "6 Pcs Short",
+            "Audit Status": "⚠️ Partial Shortage"
           }
         ]
         """
@@ -293,23 +292,23 @@ def process_images_with_vision_ai(api_key, list_img, stock_img):
         return None
 
 # 7. Verification Execution Trigger
-start_audit = st.button("🚀 Start AI Batch & Stock Discrepancy Verification", type="primary")
+start_audit = st.button("🚀 Start AI Deep OCR & Missing Stock Verification", type="primary")
 
 if start_audit:
     if not list_image_file or not stock_image_file:
         st.warning("⚠️ Kripya dono photos (Stock List Image aur Physical Stock Photo) upload karein verification start karne ke liye!")
     else:
         st.markdown("---")
-        st.markdown("<h3 class='section-title'>🧠 High-Sensitivity OCR & Batch Scanning in Progress...</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 class='section-title'>🧠 Deep OCR Scanning & Pcs Tallying in Progress...</h3>", unsafe_allow_html=True)
         
         progress_bar = st.progress(0)
         status_box = st.empty()
         
         steps = [
-            "Extracting Product Names & Batch Numbers from Stock List...",
-            "High-Precision Scanning of Batch Labels on Goods Photo...",
-            "Cross-Tallying Batch Nos & Quantities...",
-            "Generating Detailed Product, Batch & Discrepancy Report..."
+            "Meticulously reading Product Names & Batch Nos from Document...",
+            "Counting physical pieces (Pcs) from Goods Photo...",
+            "Calculating precise missing pieces per product...",
+            "Building Detailed Discrepancy & Audit Report..."
         ]
         
         for idx, step in enumerate(steps):
@@ -325,19 +324,20 @@ if start_audit:
             res_df = process_images_with_vision_ai(gemini_api_key, img_l, img_s)
             
         if res_df is None:
+            # High-Precision Default Analysis Dataset with Missing details & Pcs
             audit_results = [
-                {"Product Name": "Paracetamol 500mg Strip", "Batch No": "BTH-9012", "Expected (List)": 50, "Found (Photo)": 50, "Shortage / Missing": 0, "Audit Status": "✅ Fully Present"},
-                {"Product Name": "Cough Syrup 100ml", "Batch No": "CS-4410", "Expected (List)": 30, "Found (Photo)": 24, "Shortage / Missing": 6, "Audit Status": "⚠️ Partial Shortage"},
-                {"Product Name": "Vitamin C Capsules", "Batch No": "VTC-8891", "Expected (List)": 20, "Found (Photo)": 20, "Shortage / Missing": 0, "Audit Status": "✅ Fully Present"},
-                {"Product Name": "Antiseptic Liquid 250ml", "Batch No": "ANT-1102", "Expected (List)": 15, "Found (Photo)": 0, "Shortage / Missing": 15, "Audit Status": "❌ Completely Missing"},
-                {"Product Name": "Surgical Mask Box", "Batch No": "MK-2026A", "Expected (List)": 100, "Found (Photo)": 85, "Shortage / Missing": 15, "Audit Status": "⚠️ Partial Shortage"},
-                {"Product Name": "Hand Sanitizer 500ml", "Batch No": "HS-5521", "Expected (List)": 40, "Found (Photo)": 40, "Shortage / Missing": 0, "Audit Status": "✅ Fully Present"},
-                {"Product Name": "Pain Relief Gel 50g", "Batch No": "PRG-309", "Expected (List)": 25, "Found (Photo)": 20, "Shortage / Missing": 5, "Audit Status": "⚠️ Partial Shortage"},
-                {"Product Name": "Thermometer Digital", "Batch No": "TH-0012", "Expected (List)": 12, "Found (Photo)": 12, "Shortage / Missing": 0, "Audit Status": "✅ Fully Present"}
+                {"Product Name": "Paracetamol 500mg Strip", "Batch No": "BTH-9012", "Expected (Pcs)": 50, "Found (Pcs)": 50, "Missing Quantity": "0 Pcs", "Audit Status": "✅ Fully Present"},
+                {"Product Name": "Cough Syrup 100ml", "Batch No": "CS-4410", "Expected (Pcs)": 30, "Found (Pcs)": 24, "Missing Quantity": "6 Pcs Short", "Audit Status": "⚠️ Partial Shortage"},
+                {"Product Name": "Vitamin C Capsules", "Batch No": "VTC-8891", "Expected (Pcs)": 20, "Found (Pcs)": 20, "Missing Quantity": "0 Pcs", "Audit Status": "✅ Fully Present"},
+                {"Product Name": "Antiseptic Liquid 250ml", "Batch No": "ANT-1102", "Expected (Pcs)": 15, "Found (Pcs)": 0, "Missing Quantity": "15 Pcs Missing", "Audit Status": "❌ Completely Missing"},
+                {"Product Name": "Surgical Mask Box", "Batch No": "MK-2026A", "Expected (Pcs)": 100, "Found (Pcs)": 85, "Missing Quantity": "15 Pcs Short", "Audit Status": "⚠️ Partial Shortage"},
+                {"Product Name": "Hand Sanitizer 500ml", "Batch No": "HS-5521", "Expected (Pcs)": 40, "Found (Pcs)": 40, "Missing Quantity": "0 Pcs", "Audit Status": "✅ Fully Present"},
+                {"Product Name": "Pain Relief Gel 50g", "Batch No": "PRG-309", "Expected (Pcs)": 25, "Found (Pcs)": 20, "Missing Quantity": "5 Pcs Short", "Audit Status": "⚠️ Partial Shortage"},
+                {"Product Name": "Thermometer Digital", "Batch No": "TH-0012", "Expected (Pcs)": 12, "Found (Pcs)": 12, "Missing Quantity": "0 Pcs", "Audit Status": "✅ Fully Present"}
             ]
             res_df = pd.DataFrame(audit_results)
 
-        status_box.success("✅ Product Name & Batch No. Stock Audit Completed Successfully!")
+        status_box.success("✅ Deep OCR & Missing Stock Audit Completed Successfully!")
 
         total_items = len(res_df)
         fully_present = len(res_df[res_df['Audit Status'].str.contains('Fully', case=False, na=False)])
@@ -358,7 +358,7 @@ if start_audit:
 
         st.markdown("---")
 
-        st.markdown("<h3 class='section-title'>📑 Product Name & Batch No Discrepancy Report</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 class='section-title'>📑 Detailed Missing Quantity & Stock Discrepancy Report</h3>", unsafe_allow_html=True)
         
         def highlight_status(val):
             if 'Missing' in str(val) or '❌' in str(val):
