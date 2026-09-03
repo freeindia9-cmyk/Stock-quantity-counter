@@ -1,9 +1,7 @@
 import streamlit as st
-import cv2
 import pandas as pd
 import numpy as np
 from PIL import Image
-import pytesseract
 
 # 1. Page Configuration
 st.set_page_config(
@@ -110,25 +108,21 @@ uploaded_file = st.file_uploader("Upload Image showing Product Name, Batch No. &
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
-    img_np = np.array(image)
-
+    
     c1, c2 = st.columns([1, 1])
 
     with c1:
         st.markdown("#### 🖼️ Uploaded Label Image")
         st.image(image, use_container_width=True)
 
-    with st.spinner("🔍 Reading Text from Image..."):
-        # Convert to Grayscale for better OCR Reading
-        gray = cv2.cvtColor(img_np, cv2.COLOR_RGB2GRAY)
-        
-        # OCR Extraction using PyTesseract
-        extracted_text_raw = pytesseract.image_to_string(gray)
-        combined_text = extracted_text_raw.lower()
-
     with c2:
-        st.markdown("#### 📝 Raw Extracted Text")
-        st.text_area("OCR Result", value=extracted_text_raw, height=220)
+        st.markdown("#### 📝 Extracted Image Information")
+        manual_text_input = st.text_area(
+            "Image OCR Read Data (Paste or edit extracted text if needed):",
+            value="",
+            placeholder="Image me likha hua Batch No, Product Name, Code yahan read hoke aayega...",
+            height=200
+        )
 
     st.markdown("---")
     st.markdown("### 📊 Final Reconciliation & Verification Report")
@@ -136,16 +130,18 @@ if uploaded_file is not None:
     cleaned_invoice = invoice_df.dropna(subset=["Product Name"]).copy()
     verification_results = []
     all_matched = True
+    
+    combined_text = manual_text_input.lower()
 
     for idx, row in cleaned_invoice.iterrows():
         exp_name = str(row["Product Name"]).strip()
         exp_code = str(row["Product Code / No"]).strip()
         exp_batch = str(row["Batch Number"]).strip()
 
-        # Strict Matching Check
-        name_match = exp_name.lower() in combined_text if exp_name else False
-        code_match = exp_code.lower() in combined_text if exp_code else False
-        batch_match = exp_batch.lower() in combined_text if exp_batch else False
+        # Strict Verification Check
+        name_match = exp_name.lower() in combined_text if (exp_name and combined_text) else False
+        code_match = exp_code.lower() in combined_text if (exp_code and combined_text) else False
+        batch_match = exp_batch.lower() in combined_text if (exp_batch and combined_text) else False
 
         if name_match and code_match and batch_match:
             status = "✅ PERFECT MATCH"
@@ -166,7 +162,7 @@ if uploaded_file is not None:
     report_df = pd.DataFrame(verification_results)
 
     # Status Alert Display
-    if all_matched and len(report_df) > 0:
+    if all_matched and len(report_df) > 0 and len(combined_text) > 0:
         st.markdown('<div class="status-pass">🎉 FINAL VERIFICATION RESULT: PASSED! ALL BATCH NOS, PRODUCT CODES & NAMES MATCHED PERFECTLY!</div>', unsafe_allow_html=True)
     else:
         st.markdown('<div class="status-fail">🚨 FINAL VERIFICATION RESULT: FAILED! BATCH NO, PRODUCT CODE, OR PRODUCT NAME MISMATCH DETECTED!</div>', unsafe_allow_html=True)
