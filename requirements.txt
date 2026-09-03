@@ -1,8 +1,7 @@
 streamlit
-ultralytics
-opencv-python-headless
-easyocr
 pandas
 numpy
 Pillow
+pytesseract
+opencv-python-headless
 openpyxl
