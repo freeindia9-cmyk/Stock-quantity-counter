@@ -1,6 +1,7 @@
 streamlit
-pandas
-easyocr
+ultralytics
 opencv-python-headless
-Pillow
+pandas
 numpy
+Pillow
+openpyxl
