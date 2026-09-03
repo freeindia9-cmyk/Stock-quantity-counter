@@ -3,8 +3,7 @@ import cv2
 import pandas as pd
 import numpy as np
 from PIL import Image
-import easyocr
-import re
+import pytesseract
 
 # 1. Page Configuration
 st.set_page_config(
@@ -14,7 +13,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 2. Custom CSS
+# 2. Custom Styling
 st.markdown("""
 <style>
     .stApp {
@@ -72,17 +71,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 3. EasyOCR Engine Loader
-@st.cache_resource
-def load_ocr_reader():
-    return easyocr.Reader(['en'], gpu=False)
-
-try:
-    reader = load_ocr_reader()
-except Exception as e:
-    st.error(f"OCR Engine Load error: {e}")
-
-# 4. Header Section
+# 3. Header Section
 col_logo, col_title = st.columns([1, 5])
 with col_logo:
     st.markdown('<div style="font-size: 50px;">🔍</div>', unsafe_allow_html=True)
@@ -94,7 +83,7 @@ with col_title:
 
 st.divider()
 
-# 5. Expected Invoice Entry Table
+# 4. Step 1: Invoice Data Entry
 st.markdown("### 📋 Step 1: Expected Invoice / Bill Details")
 
 default_invoice_data = pd.DataFrame([
@@ -115,7 +104,7 @@ default_invoice_data = pd.DataFrame([
 invoice_df = st.data_editor(default_invoice_data, num_rows="dynamic", use_container_width=True, key="invoice_editor")
 
 st.markdown("---")
-st.markdown("### 📸 Step 2: Upload Stock Label / Product Image")
+st.markdown("### 📸 Step 2: Upload Product / Label Image")
 
 uploaded_file = st.file_uploader("Upload Image showing Product Name, Batch No. & Product Code", type=["jpg", "jpeg", "png"])
 
@@ -129,16 +118,17 @@ if uploaded_file is not None:
         st.markdown("#### 🖼️ Uploaded Label Image")
         st.image(image, use_container_width=True)
 
-    with st.spinner("🔍 Reading Batch Number, Product Name & Product Code from Image..."):
-        # Run OCR on Image
-        ocr_results = reader.readtext(img_np)
-        extracted_texts = [res[1].strip() for res in ocr_results]
-        combined_text_raw = " ".join(extracted_texts)
-        combined_text = combined_text_raw.lower()
+    with st.spinner("🔍 Reading Text from Image..."):
+        # Convert to Grayscale for better OCR Reading
+        gray = cv2.cvtColor(img_np, cv2.COLOR_RGB2GRAY)
+        
+        # OCR Extraction using PyTesseract
+        extracted_text_raw = pytesseract.image_to_string(gray)
+        combined_text = extracted_text_raw.lower()
 
     with c2:
-        st.markdown("#### 📝 Raw OCR Extracted Text")
-        st.text_area("Extracted Labels from Image", value=combined_text_raw, height=220)
+        st.markdown("#### 📝 Raw Extracted Text")
+        st.text_area("OCR Result", value=extracted_text_raw, height=220)
 
     st.markdown("---")
     st.markdown("### 📊 Final Reconciliation & Verification Report")
@@ -151,9 +141,8 @@ if uploaded_file is not None:
         exp_name = str(row["Product Name"]).strip()
         exp_code = str(row["Product Code / No"]).strip()
         exp_batch = str(row["Batch Number"]).strip()
-        exp_qty = row["Quantity"]
 
-        # Check Matches in OCR Text
+        # Strict Matching Check
         name_match = exp_name.lower() in combined_text if exp_name else False
         code_match = exp_code.lower() in combined_text if exp_code else False
         batch_match = exp_batch.lower() in combined_text if exp_batch else False
@@ -176,7 +165,7 @@ if uploaded_file is not None:
 
     report_df = pd.DataFrame(verification_results)
 
-    # Display Final Status Badge
+    # Status Alert Display
     if all_matched and len(report_df) > 0:
         st.markdown('<div class="status-pass">🎉 FINAL VERIFICATION RESULT: PASSED! ALL BATCH NOS, PRODUCT CODES & NAMES MATCHED PERFECTLY!</div>', unsafe_allow_html=True)
     else:
