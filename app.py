@@ -2,172 +2,194 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from PIL import Image
+import io
 
 # 1. Page Configuration
 st.set_page_config(
-    page_title="DHARMENDRA KUMAR (MISHRA) - Batch & Product Verification Engine",
-    page_icon="🔍",
+    page_title="DHARMENDRA KUMAR (MISHRA) - Superior AI Vision Stock Scanner",
+    page_icon="👁️",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
-# 2. Custom Styling
+# 2. Ultra-Futuristic Cyberpunk Glassmorphism UI CSS
 st.markdown("""
 <style>
+    /* Animated Gradient Background */
     .stApp {
-        background: linear-gradient(-45deg, #022c22, #064e3b, #0f172a, #065f46, #022c22);
+        background: radial-gradient(circle at top left, #064e3b, #022c22, #0f172a, #042f2e);
         background-size: 400% 400%;
-        animation: gradientBG 10s ease infinite;
+        animation: gradientAnimation 12s ease infinite;
         color: #ecfdf5;
-        font-family: 'Segoe UI', Roboto, sans-serif;
+        font-family: 'Segoe UI', Roboto, Helvetica, sans-serif;
     }
-    @keyframes gradientBG {
+
+    @keyframes gradientAnimation {
         0% { background-position: 0% 50%; }
         50% { background-position: 100% 50%; }
         100% { background-position: 0% 50%; }
     }
+
+    .header-box {
+        background: rgba(6, 78, 59, 0.35);
+        border: 1px solid rgba(52, 211, 153, 0.4);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-radius: 20px;
+        padding: 24px;
+        text-align: center;
+        margin-bottom: 25px;
+    }
+
     .floating-header {
         background: linear-gradient(90deg, #34d399, #10b981, #06b6d4, #a7f3d0, #34d399);
         background-size: 300% 300%;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        font-size: 36px;
+        font-size: 40px;
         font-weight: 900;
+        letter-spacing: 1px;
+        margin: 0;
+        filter: drop-shadow(0 0 15px rgba(52, 211, 153, 0.4));
     }
+
     .designer-badge {
         display: inline-block;
-        background: rgba(52, 211, 153, 0.2);
+        background: linear-gradient(135deg, rgba(52, 211, 153, 0.2), rgba(6, 182, 212, 0.3));
         border: 1px solid rgba(52, 211, 153, 0.6);
-        padding: 4px 14px;
-        border-radius: 20px;
+        padding: 6px 18px;
+        border-radius: 30px;
         font-size: 13px;
-        font-weight: 700;
+        font-weight: 800;
+        letter-spacing: 1.5px;
         color: #34d399;
+        box-shadow: 0 0 15px rgba(52, 211, 153, 0.3);
+        margin-top: 10px;
     }
+
+    .glass-card {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(52, 211, 153, 0.3);
+        border-radius: 18px;
+        padding: 20px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Primary Upload Button Override */
+    [data-testid="stFileUploader"] section {
+        background: rgba(6, 78, 59, 0.25) !important;
+        border: 2px dashed #34d399 !important;
+        border-radius: 16px !important;
+        padding: 25px !important;
+        transition: all 0.3s ease;
+    }
+    [data-testid="stFileUploader"] section:hover {
+        border-color: #06b6d4 !important;
+        box-shadow: 0 0 25px rgba(6, 182, 212, 0.4) !important;
+    }
+
     .status-pass {
-        background: rgba(16, 185, 129, 0.25);
+        background: rgba(16, 185, 129, 0.2);
         border: 2px solid #10b981;
-        border-radius: 12px;
-        padding: 18px;
+        border-radius: 14px;
+        padding: 20px;
         text-align: center;
         color: #34d399;
         font-size: 22px;
         font-weight: 900;
-        box-shadow: 0 0 25px rgba(16, 185, 129, 0.4);
+        box-shadow: 0 0 30px rgba(16, 185, 129, 0.5);
     }
+
     .status-fail {
-        background: rgba(239, 68, 68, 0.25);
+        background: rgba(239, 68, 68, 0.2);
         border: 2px solid #ef4444;
-        border-radius: 12px;
-        padding: 18px;
+        border-radius: 14px;
+        padding: 20px;
         text-align: center;
         color: #f87171;
         font-size: 22px;
         font-weight: 900;
-        box-shadow: 0 0 25px rgba(239, 68, 68, 0.4);
+        box-shadow: 0 0 30px rgba(239, 68, 68, 0.5);
     }
 </style>
 """, unsafe_allow_html=True)
 
 # 3. Header Section
-col_logo, col_title = st.columns([1, 5])
-with col_logo:
-    st.markdown('<div style="font-size: 50px;">🔍</div>', unsafe_allow_html=True)
+st.markdown("""
+<div class="header-box">
+    <h1 class="floating-header">DHARMENDRA KUMAR (MISHRA)</h1>
+    <span class="designer-badge">✨ ARCHITECT & DESIGNER: RAJVEER</span>
+    <p style="color: #a7f3d0; margin-top: 10px; font-weight: 600;">👁️ SUPERIOR AI VISION - LIVE STOCK & LABEL SCANNER ENGINE</p>
+</div>
+""", unsafe_allow_html=True)
 
-with col_title:
-    st.markdown('<h1 class="floating-header">DHARMENDRA KUMAR (MISHRA)</h1>', unsafe_allow_html=True)
-    st.markdown('<span class="designer-badge">✨ ARCHITECT & DESIGNER: RAJVEER</span>', unsafe_allow_html=True)
-    st.caption("🏷️ Automatic Batch No., Product Code & Name Verification Engine")
+# 4. Pure Vision Scanner Section
+st.markdown("### 📸 Superior Vision Image Capture & Upload")
 
-st.divider()
+input_type = st.radio("Choose Input Mode:", ["📁 Upload Stock/Label Image", "📷 Live Camera Capture"], horizontal=True)
 
-# 4. Step 1: Invoice Data Entry
-st.markdown("### 📋 Step 1: Expected Invoice / Bill Details")
+uploaded_image = None
 
-default_invoice_data = pd.DataFrame([
-    {
-        "Product Name": "Paracetamol 500mg",
-        "Product Code / No": "PRD-101",
-        "Batch Number": "BTH-9982",
-        "Quantity": 1
-    },
-    {
-        "Product Name": "Abbott Syrup",
-        "Product Code / No": "ABT-550",
-        "Batch Number": "BTH-1240",
-        "Quantity": 1
-    }
-])
+if input_type == "📁 Upload Stock/Label Image":
+    uploaded_image = st.file_uploader("Upload Product Label / Box Image", type=["jpg", "jpeg", "png"])
+else:
+    uploaded_image = st.camera_input("Take a photo of Product Label / Box")
 
-invoice_df = st.data_editor(default_invoice_data, num_rows="dynamic", use_container_width=True, key="invoice_editor")
-
-st.markdown("---")
-st.markdown("### 📸 Step 2: Upload Product / Label Image")
-
-uploaded_file = st.file_uploader("Upload Image showing Product Name, Batch No. & Product Code", type=["jpg", "jpeg", "png"])
-
-if uploaded_file is not None:
-    image = Image.open(uploaded_file)
+if uploaded_image is not None:
+    image = Image.open(uploaded_image)
     
-    c1, c2 = st.columns([1, 1])
+    st.markdown("---")
+    col1, col2 = st.columns([1, 1])
 
-    with c1:
-        st.markdown("#### 🖼️ Uploaded Label Image")
+    with col1:
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.markdown("#### 🖼️ Captured Stock Label")
         st.image(image, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    with c2:
-        st.markdown("#### 📝 Extracted Image Information")
-        manual_text_input = st.text_area(
-            "Image OCR Read Data (Paste or edit extracted text if needed):",
+    with col2:
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.markdown("#### ⚡ AI OCR & Label Extraction")
+        st.info("💡 Image Se Read Kiya Hua Data Niche Paste / Verify Karein:")
+        
+        extracted_data = st.text_area(
+            "Extracted Label Text (Batch No, Code, Name):",
             value="",
-            placeholder="Image me likha hua Batch No, Product Name, Code yahan read hoke aayega...",
+            placeholder="Type or paste the extracted text from label...\nExample:\nProduct Name: Paracetamol 500mg\nBatch No: BTH-9982\nProduct Code: PRD-101",
             height=200
         )
+        st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("---")
-    st.markdown("### 📊 Final Reconciliation & Verification Report")
+    st.markdown("### 🔍 Verification & Quality Inspection")
 
-    cleaned_invoice = invoice_df.dropna(subset=["Product Name"]).copy()
-    verification_results = []
-    all_matched = True
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    v1, v2, v3 = st.columns(3)
     
-    combined_text = manual_text_input.lower()
-
-    for idx, row in cleaned_invoice.iterrows():
-        exp_name = str(row["Product Name"]).strip()
-        exp_code = str(row["Product Code / No"]).strip()
-        exp_batch = str(row["Batch Number"]).strip()
-
-        # Strict Verification Check
-        name_match = exp_name.lower() in combined_text if (exp_name and combined_text) else False
-        code_match = exp_code.lower() in combined_text if (exp_code and combined_text) else False
-        batch_match = exp_batch.lower() in combined_text if (exp_batch and combined_text) else False
-
-        if name_match and code_match and batch_match:
-            status = "✅ PERFECT MATCH"
-        else:
-            status = "❌ MISMATCH / NOT FOUND"
-            all_matched = False
-
-        verification_results.append({
-            "Product Name": exp_name,
-            "Product Code / No": exp_code,
-            "Batch Number": exp_batch,
-            "Name Found?": "✅ Yes" if name_match else "❌ No",
-            "Code Found?": "✅ Yes" if code_match else "❌ No",
-            "Batch Found?": "✅ Yes" if batch_match else "❌ No",
-            "Overall Status": status
-        })
-
-    report_df = pd.DataFrame(verification_results)
-
-    # Status Alert Display
-    if all_matched and len(report_df) > 0 and len(combined_text) > 0:
-        st.markdown('<div class="status-pass">🎉 FINAL VERIFICATION RESULT: PASSED! ALL BATCH NOS, PRODUCT CODES & NAMES MATCHED PERFECTLY!</div>', unsafe_allow_html=True)
-    else:
-        st.markdown('<div class="status-fail">🚨 FINAL VERIFICATION RESULT: FAILED! BATCH NO, PRODUCT CODE, OR PRODUCT NAME MISMATCH DETECTED!</div>', unsafe_allow_html=True)
+    with v1:
+        search_name = st.text_input("Product Name to Verify", placeholder="e.g. Paracetamol")
+    with v2:
+        search_batch = st.text_input("Batch No. to Verify", placeholder="e.g. BTH-9982")
+    with v3:
+        search_code = st.text_input("Product Code to Verify", placeholder="e.g. PRD-101")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    st.dataframe(report_df, use_container_width=True)
+
+    # Superior Match Check Logic
+    if search_name or search_batch or search_code:
+        full_text = extracted_data.lower()
+        
+        name_ok = (search_name.lower() in full_text) if search_name else True
+        batch_ok = (search_batch.lower() in full_text) if search_batch else True
+        code_ok = (search_code.lower() in full_text) if search_code else True
+
+        if name_ok and batch_ok and code_ok and len(full_text) > 0:
+            st.markdown('<div class="status-pass">🎉 SUPERIOR VISION RESULT: PASSED!<br><span style="font-size: 16px;">Product Name, Batch Number & Product Code Matched Successfully!</span></div>', unsafe_allow_html=True)
+        else:
+            st.markdown('<div class="status-fail">🚨 SUPERIOR VISION RESULT: MISMATCH / FAILED!<br><span style="font-size: 16px;">One or more details (Batch/Name/Code) do not match the extracted label text.</span></div>', unsafe_allow_html=True)
 
 st.markdown("<br><hr><div style='text-align: center; color: #34d399; font-weight: 700;'>⚡ Designed & Developed by Dharmendra Kumar (Mishra)</div>", unsafe_allow_html=True)
