@@ -5,8 +5,8 @@ from PIL import Image
 
 # 1. Page Configuration
 st.set_page_config(
-    page_title="DHARMENDRA KUMAR (MISHRA) - Dual Column Superior Stock Scanner",
-    page_icon="📦",
+    page_title="DHARMENDRA KUMAR (MISHRA) - Dual Photo Vision Stock Verification Engine",
+    page_icon="📸",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -73,7 +73,7 @@ st.markdown("""
         padding: 22px;
         backdrop-filter: blur(12px);
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        min-height: 520px;
+        min-height: 560px;
     }
 
     /* Uploader Customization */
@@ -110,124 +110,146 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 3. Header
+# 3. Header Section
 st.markdown("""
 <div class="header-box">
     <h1 class="floating-header">DHARMENDRA KUMAR (MISHRA)</h1>
     <span class="designer-badge">✨ ARCHITECT & DESIGNER: RAJVEER</span>
-    <p style="color: #a7f3d0; margin-top: 10px; font-weight: 600;">👁️ DUAL-COLUMN SUPERIOR VISION & STOCK RECONCILIATION ENGINE</p>
+    <p style="color: #a7f3d0; margin-top: 10px; font-weight: 600;">👁️ DUAL PHOTO VISION - STOCK LIST VS PHYSICAL PRODUCT COMPARISON ENGINE</p>
 </div>
 """, unsafe_allow_html=True)
 
-# 4. Two Independent Columns Layout
-col_left, col_right = st.columns([1, 1])
+# 4. Two Independent Photo Upload Columns
+col1, col2 = st.columns([1, 1])
 
-# --- LEFT COLUMN: STOCK LIST ---
-with col_left:
+# --- COLUMN 1: STOCK LIST PAPER PHOTO UPLOAD ---
+with col1:
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    st.markdown("### 📋 Column 1: Expected Stock List / Bill")
-    st.caption("Enter your expected Stock Details (Product Name, Code, Batch No, Quantity):")
+    st.markdown("### 📜 Column 1: Stock List / Bill Photo")
+    st.caption("Upload photo of Invoice, Stock Sheet or Bill paper:")
 
-    default_stock_list = pd.DataFrame([
-        {
-            "Product Name": "Paracetamol 500mg",
-            "Product Code": "PRD-101",
-            "Batch Number": "BTH-9982",
-            "Quantity": 1
-        },
-        {
-            "Product Name": "Abbott Syrup",
-            "Product Code": "ABT-550",
-            "Batch Number": "BTH-1240",
-            "Quantity": 1
-        }
-    ])
+    mode_list = st.radio("Source for Stock List:", ["📁 Upload Stock List Photo", "📷 Camera Capture List"], horizontal=True, key="list_mode")
 
-    stock_df = st.data_editor(
-        default_stock_list,
-        num_rows="dynamic",
-        use_container_width=True,
-        key="stock_list_editor"
-    )
-    st.markdown('</div>', unsafe_allow_html=True)
-
-# --- RIGHT COLUMN: STOCK PHOTO UPLOAD & SCAN ---
-with col_right:
-    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    st.markdown("### 📸 Column 2: Upload Stock / Label Photo")
-    
-    input_mode = st.radio("Select Source:", ["📁 File Upload", "📷 Live Camera"], horizontal=True)
-
-    uploaded_photo = None
-    if input_mode == "📁 File Upload":
-        uploaded_photo = st.file_uploader("Upload Image showing Product Name, Batch No. & Code", type=["jpg", "jpeg", "png"])
+    list_photo = None
+    if mode_list == "📁 Upload Stock List Photo":
+        list_photo = st.file_uploader("Upload Stock List / Invoice Photo", type=["jpg", "jpeg", "png"], key="list_upload")
     else:
-        uploaded_photo = st.camera_input("Take Live Photo")
+        list_photo = st.camera_input("Take Photo of Stock List / Invoice", key="list_cam")
 
-    extracted_ocr_text = ""
-
-    if uploaded_photo is not None:
-        img = Image.open(uploaded_photo)
-        st.image(img, caption="Uploaded Stock Photo", use_container_width=True)
+    list_text = ""
+    if list_photo is not None:
+        img_list = Image.open(list_photo)
+        st.image(img_list, caption="Stock List Document Photo", use_container_width=True)
         
-        st.markdown("##### 📝 Extracted / Read Text from Photo:")
-        extracted_ocr_text = st.text_area(
-            "Photo Read Data (Batch No, Product Code, Name):",
+        st.markdown("##### 📝 Stock List Extracted / Read Details:")
+        list_text = st.text_area(
+            "Extracted Stock List Text (Product Name, Batch, Code):",
             value="",
-            placeholder="Type or paste the read details from photo label...",
-            height=130
+            placeholder="Stock List photo se read kiye gaye details paste ya edit karein...\nExample:\nParacetamol 500mg, BTH-9982, PRD-101",
+            height=130,
+            key="list_text_area"
         )
     st.markdown('</div>', unsafe_allow_html=True)
 
-# --- BOTTOM SECTION: RECONCILIATION & MATCHING REPORT ---
-st.markdown("<br>", unsafe_allow_html=True)
-st.markdown("### 📊 Superior Verification & Reconciliation Report")
+# --- COLUMN 2: PHYSICAL PRODUCT LABEL PHOTO UPLOAD ---
+with col2:
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    st.markdown("### 📦 Column 2: Physical Product / Label Photo")
+    st.caption("Upload photo of Box Label, Carton, or Product Package:")
 
-if uploaded_photo is not None:
-    cleaned_stock = stock_df.dropna(subset=["Product Name"]).copy()
-    verification_data = []
-    overall_pass = True
-    read_text_lower = extracted_ocr_text.lower()
+    mode_prod = st.radio("Source for Product Photo:", ["📁 Upload Product Photo", "📷 Camera Capture Product"], horizontal=True, key="prod_mode")
 
-    for idx, row in cleaned_stock.iterrows():
-        p_name = str(row["Product Name"]).strip()
-        p_code = str(row["Product Code"]).strip()
-        p_batch = str(row["Batch Number"]).strip()
-        p_qty = row["Quantity"]
-
-        # 1-to-1 Match check with Photo text
-        name_found = p_name.lower() in read_text_lower if (p_name and read_text_lower) else False
-        code_found = p_code.lower() in read_text_lower if (p_code and read_text_lower) else False
-        batch_found = p_batch.lower() in read_text_lower if (p_batch and read_text_lower) else False
-
-        if name_found and code_found and batch_found:
-            status = "✅ MATCHED PERFECTLY"
-        else:
-            status = "❌ MISMATCH / NOT FOUND"
-            overall_pass = False
-
-        verification_data.append({
-            "Product Name": p_name,
-            "Product Code": p_code,
-            "Batch Number": p_batch,
-            "Expected Qty": p_qty,
-            "Name Found?": "✅ Yes" if name_found else "❌ No",
-            "Code Found?": "✅ Yes" if code_found else "❌ No",
-            "Batch Found?": "✅ Yes" if batch_found else "❌ No",
-            "Status": status
-        })
-
-    report_df = pd.DataFrame(verification_data)
-
-    if overall_pass and len(report_df) > 0 and len(read_text_lower) > 0:
-        st.markdown('<div class="status-pass">🎉 RECONCILIATION PASSED!<br><span style="font-size: 16px;">Stock List Data matched 100% with Uploaded Stock Photo!</span></div>', unsafe_allow_html=True)
+    prod_photo = None
+    if mode_prod == "📁 Upload Product Photo":
+        prod_photo = st.file_uploader("Upload Product Box / Label Photo", type=["jpg", "jpeg", "png"], key="prod_upload")
     else:
-        st.markdown('<div class="status-fail">🚨 RECONCILIATION MISMATCH DETECTED!<br><span style="font-size: 16px;">One or more items, batch numbers, or product codes do not match the photo data.</span></div>', unsafe_allow_html=True)
+        prod_photo = st.camera_input("Take Photo of Physical Product Label", key="prod_cam")
 
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.dataframe(report_df, use_container_width=True)
+    prod_text = ""
+    if prod_photo is not None:
+        img_prod = Image.open(prod_photo)
+        st.image(img_prod, caption="Physical Product Label Photo", use_container_width=True)
+        
+        st.markdown("##### 📝 Physical Label Extracted / Read Details:")
+        prod_text = st.text_area(
+            "Extracted Product Label Text (Batch No, Code, Name):",
+            value="",
+            placeholder="Product Label photo se read kiye gaye details paste ya edit karein...\nExample:\nParacetamol 500mg, BTH-9982, PRD-101",
+            height=130,
+            key="prod_text_area"
+        )
+    st.markdown('</div>', unsafe_allow_html=True)
 
+# --- BOTTOM SECTION: DUAL PHOTO RECONCILIATION REPORT ---
+st.markdown("<br>", unsafe_allow_html=True)
+st.markdown("### 📊 Dual-Photo Vision Reconciliation Report")
+
+if list_photo is not None and prod_photo is not None:
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    
+    st.markdown("#### 🔍 Enter Parameters to Reconcile / Match Both Photos:")
+    v1, v2, v3 = st.columns(3)
+    
+    with v1:
+        search_name = st.text_input("Verify Product Name", placeholder="e.g. Paracetamol")
+    with v2:
+        search_batch = st.text_input("Verify Batch Number", placeholder="e.g. BTH-9982")
+    with v3:
+        search_code = st.text_input("Verify Product Code", placeholder="e.g. PRD-101")
+
+    st.markdown('</div><br>', unsafe_allow_html=True)
+
+    # Reconciliation Logic
+    list_lower = list_text.lower()
+    prod_lower = prod_text.lower()
+
+    if search_name or search_batch or search_code:
+        # Check presence in List Photo Data
+        name_in_list = search_name.lower() in list_lower if search_name else True
+        batch_in_list = search_batch.lower() in list_lower if search_batch else True
+        code_in_list = search_code.lower() in list_lower if search_code else True
+
+        # Check presence in Product Photo Data
+        name_in_prod = search_name.lower() in prod_lower if search_name else True
+        batch_in_prod = search_batch.lower() in prod_lower if search_batch else True
+        code_in_prod = search_code.lower() in prod_lower if search_code else True
+
+        list_matched = name_in_list and batch_in_list and code_in_list
+        prod_matched = name_in_prod and batch_in_prod and code_in_prod
+
+        # Comparison DataFrame
+        report_data = [{
+            "Parameter": "Product Name",
+            "Search Keyword": search_name if search_name else "N/A",
+            "Found in Stock List Photo?": "✅ Yes" if name_in_list else "❌ No",
+            "Found in Product Label Photo?": "✅ Yes" if name_in_prod else "❌ No",
+            "Status": "✅ MATCHED" if (name_in_list and name_in_prod) else "❌ MISMATCH"
+        }, {
+            "Parameter": "Batch Number",
+            "Search Keyword": search_batch if search_batch else "N/A",
+            "Found in Stock List Photo?": "✅ Yes" if batch_in_list else "❌ No",
+            "Found in Product Label Photo?": "✅ Yes" if batch_in_prod else "❌ No",
+            "Status": "✅ MATCHED" if (batch_in_list and batch_in_prod) else "❌ MISMATCH"
+        }, {
+            "Parameter": "Product Code",
+            "Search Keyword": search_code if search_code else "N/A",
+            "Found in Stock List Photo?": "✅ Yes" if code_in_list else "❌ No",
+            "Found in Product Label Photo?": "✅ Yes" if code_in_prod else "❌ No",
+            "Status": "✅ MATCHED" if (code_in_list and code_in_prod) else "❌ MISMATCH"
+        }]
+
+        st.dataframe(pd.DataFrame(report_data), use_container_width=True)
+
+        if list_matched and prod_matched and len(list_lower) > 0 and len(prod_lower) > 0:
+            st.markdown('<div class="status-pass">🎉 RECONCILIATION PASSED!<br><span style="font-size: 16px;">Stock List Photo and Physical Product Label Photo Matched 100%!</span></div>', unsafe_allow_html=True)
+        else:
+            st.markdown('<div class="status-fail">🚨 RECONCILIATION MISMATCH DETECTED!<br><span style="font-size: 16px;">Details in Stock List Photo do not match Physical Product Label Photo.</span></div>', unsafe_allow_html=True)
+            
+elif list_photo is None and prod_photo is None:
+    st.info("💡 Left Column me Stock List Document ki photo aur Right Column me Physical Product ki photo upload karein.")
+elif list_photo is None:
+    st.warning("⚠️ Kripya Left Column me Stock List ki photo upload karein.")
 else:
-    st.info("💡 Right Column me photo upload ya capture karein reconciliation report dekhne ke liye.")
+    st.warning("⚠️ Kripya Right Column me Physical Product Label ki photo upload karein.")
 
 st.markdown("<br><hr><div style='text-align: center; color: #34d399; font-weight: 700;'>⚡ Designed & Developed by Dharmendra Kumar (Mishra)</div>", unsafe_allow_html=True)
