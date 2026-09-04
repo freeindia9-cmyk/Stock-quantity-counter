@@ -2,20 +2,18 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from PIL import Image
-import io
 
 # 1. Page Configuration
 st.set_page_config(
-    page_title="DHARMENDRA KUMAR (MISHRA) - Superior AI Vision Stock Scanner",
-    page_icon="👁️",
+    page_title="DHARMENDRA KUMAR (MISHRA) - Dual Column Superior Stock Scanner",
+    page_icon="📦",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# 2. Ultra-Futuristic Cyberpunk Glassmorphism UI CSS
+# 2. Cyberpunk Emerald Glassmorphism UI CSS
 st.markdown("""
 <style>
-    /* Animated Gradient Background */
     .stApp {
         background: radial-gradient(circle at top left, #064e3b, #022c22, #0f172a, #042f2e);
         background-size: 400% 400%;
@@ -69,25 +67,21 @@ st.markdown("""
     }
 
     .glass-card {
-        background: rgba(15, 23, 42, 0.6);
-        border: 1px solid rgba(52, 211, 153, 0.3);
+        background: rgba(15, 23, 42, 0.65);
+        border: 1px solid rgba(52, 211, 153, 0.35);
         border-radius: 18px;
-        padding: 20px;
-        backdrop-filter: blur(10px);
+        padding: 22px;
+        backdrop-filter: blur(12px);
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        min-height: 520px;
     }
 
-    /* Primary Upload Button Override */
+    /* Uploader Customization */
     [data-testid="stFileUploader"] section {
         background: rgba(6, 78, 59, 0.25) !important;
         border: 2px dashed #34d399 !important;
         border-radius: 16px !important;
-        padding: 25px !important;
-        transition: all 0.3s ease;
-    }
-    [data-testid="stFileUploader"] section:hover {
-        border-color: #06b6d4 !important;
-        box-shadow: 0 0 25px rgba(6, 182, 212, 0.4) !important;
+        padding: 20px !important;
     }
 
     .status-pass {
@@ -116,80 +110,124 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 3. Header Section
+# 3. Header
 st.markdown("""
 <div class="header-box">
     <h1 class="floating-header">DHARMENDRA KUMAR (MISHRA)</h1>
     <span class="designer-badge">✨ ARCHITECT & DESIGNER: RAJVEER</span>
-    <p style="color: #a7f3d0; margin-top: 10px; font-weight: 600;">👁️ SUPERIOR AI VISION - LIVE STOCK & LABEL SCANNER ENGINE</p>
+    <p style="color: #a7f3d0; margin-top: 10px; font-weight: 600;">👁️ DUAL-COLUMN SUPERIOR VISION & STOCK RECONCILIATION ENGINE</p>
 </div>
 """, unsafe_allow_html=True)
 
-# 4. Pure Vision Scanner Section
-st.markdown("### 📸 Superior Vision Image Capture & Upload")
+# 4. Two Independent Columns Layout
+col_left, col_right = st.columns([1, 1])
 
-input_type = st.radio("Choose Input Mode:", ["📁 Upload Stock/Label Image", "📷 Live Camera Capture"], horizontal=True)
-
-uploaded_image = None
-
-if input_type == "📁 Upload Stock/Label Image":
-    uploaded_image = st.file_uploader("Upload Product Label / Box Image", type=["jpg", "jpeg", "png"])
-else:
-    uploaded_image = st.camera_input("Take a photo of Product Label / Box")
-
-if uploaded_image is not None:
-    image = Image.open(uploaded_image)
-    
-    st.markdown("---")
-    col1, col2 = st.columns([1, 1])
-
-    with col1:
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.markdown("#### 🖼️ Captured Stock Label")
-        st.image(image, use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    with col2:
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.markdown("#### ⚡ AI OCR & Label Extraction")
-        st.info("💡 Image Se Read Kiya Hua Data Niche Paste / Verify Karein:")
-        
-        extracted_data = st.text_area(
-            "Extracted Label Text (Batch No, Code, Name):",
-            value="",
-            placeholder="Type or paste the extracted text from label...\nExample:\nProduct Name: Paracetamol 500mg\nBatch No: BTH-9982\nProduct Code: PRD-101",
-            height=200
-        )
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    st.markdown("---")
-    st.markdown("### 🔍 Verification & Quality Inspection")
-
+# --- LEFT COLUMN: STOCK LIST ---
+with col_left:
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    v1, v2, v3 = st.columns(3)
-    
-    with v1:
-        search_name = st.text_input("Product Name to Verify", placeholder="e.g. Paracetamol")
-    with v2:
-        search_batch = st.text_input("Batch No. to Verify", placeholder="e.g. BTH-9982")
-    with v3:
-        search_code = st.text_input("Product Code to Verify", placeholder="e.g. PRD-101")
-    
+    st.markdown("### 📋 Column 1: Expected Stock List / Bill")
+    st.caption("Enter your expected Stock Details (Product Name, Code, Batch No, Quantity):")
+
+    default_stock_list = pd.DataFrame([
+        {
+            "Product Name": "Paracetamol 500mg",
+            "Product Code": "PRD-101",
+            "Batch Number": "BTH-9982",
+            "Quantity": 1
+        },
+        {
+            "Product Name": "Abbott Syrup",
+            "Product Code": "ABT-550",
+            "Batch Number": "BTH-1240",
+            "Quantity": 1
+        }
+    ])
+
+    stock_df = st.data_editor(
+        default_stock_list,
+        num_rows="dynamic",
+        use_container_width=True,
+        key="stock_list_editor"
+    )
     st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
+# --- RIGHT COLUMN: STOCK PHOTO UPLOAD & SCAN ---
+with col_right:
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    st.markdown("### 📸 Column 2: Upload Stock / Label Photo")
+    
+    input_mode = st.radio("Select Source:", ["📁 File Upload", "📷 Live Camera"], horizontal=True)
 
-    # Superior Match Check Logic
-    if search_name or search_batch or search_code:
-        full_text = extracted_data.lower()
+    uploaded_photo = None
+    if input_mode == "📁 File Upload":
+        uploaded_photo = st.file_uploader("Upload Image showing Product Name, Batch No. & Code", type=["jpg", "jpeg", "png"])
+    else:
+        uploaded_photo = st.camera_input("Take Live Photo")
+
+    extracted_ocr_text = ""
+
+    if uploaded_photo is not None:
+        img = Image.open(uploaded_photo)
+        st.image(img, caption="Uploaded Stock Photo", use_container_width=True)
         
-        name_ok = (search_name.lower() in full_text) if search_name else True
-        batch_ok = (search_batch.lower() in full_text) if search_batch else True
-        code_ok = (search_code.lower() in full_text) if search_code else True
+        st.markdown("##### 📝 Extracted / Read Text from Photo:")
+        extracted_ocr_text = st.text_area(
+            "Photo Read Data (Batch No, Product Code, Name):",
+            value="",
+            placeholder="Type or paste the read details from photo label...",
+            height=130
+        )
+    st.markdown('</div>', unsafe_allow_html=True)
 
-        if name_ok and batch_ok and code_ok and len(full_text) > 0:
-            st.markdown('<div class="status-pass">🎉 SUPERIOR VISION RESULT: PASSED!<br><span style="font-size: 16px;">Product Name, Batch Number & Product Code Matched Successfully!</span></div>', unsafe_allow_html=True)
+# --- BOTTOM SECTION: RECONCILIATION & MATCHING REPORT ---
+st.markdown("<br>", unsafe_allow_html=True)
+st.markdown("### 📊 Superior Verification & Reconciliation Report")
+
+if uploaded_photo is not None:
+    cleaned_stock = stock_df.dropna(subset=["Product Name"]).copy()
+    verification_data = []
+    overall_pass = True
+    read_text_lower = extracted_ocr_text.lower()
+
+    for idx, row in cleaned_stock.iterrows():
+        p_name = str(row["Product Name"]).strip()
+        p_code = str(row["Product Code"]).strip()
+        p_batch = str(row["Batch Number"]).strip()
+        p_qty = row["Quantity"]
+
+        # 1-to-1 Match check with Photo text
+        name_found = p_name.lower() in read_text_lower if (p_name and read_text_lower) else False
+        code_found = p_code.lower() in read_text_lower if (p_code and read_text_lower) else False
+        batch_found = p_batch.lower() in read_text_lower if (p_batch and read_text_lower) else False
+
+        if name_found and code_found and batch_found:
+            status = "✅ MATCHED PERFECTLY"
         else:
-            st.markdown('<div class="status-fail">🚨 SUPERIOR VISION RESULT: MISMATCH / FAILED!<br><span style="font-size: 16px;">One or more details (Batch/Name/Code) do not match the extracted label text.</span></div>', unsafe_allow_html=True)
+            status = "❌ MISMATCH / NOT FOUND"
+            overall_pass = False
+
+        verification_data.append({
+            "Product Name": p_name,
+            "Product Code": p_code,
+            "Batch Number": p_batch,
+            "Expected Qty": p_qty,
+            "Name Found?": "✅ Yes" if name_found else "❌ No",
+            "Code Found?": "✅ Yes" if code_found else "❌ No",
+            "Batch Found?": "✅ Yes" if batch_found else "❌ No",
+            "Status": status
+        })
+
+    report_df = pd.DataFrame(verification_data)
+
+    if overall_pass and len(report_df) > 0 and len(read_text_lower) > 0:
+        st.markdown('<div class="status-pass">🎉 RECONCILIATION PASSED!<br><span style="font-size: 16px;">Stock List Data matched 100% with Uploaded Stock Photo!</span></div>', unsafe_allow_html=True)
+    else:
+        st.markdown('<div class="status-fail">🚨 RECONCILIATION MISMATCH DETECTED!<br><span style="font-size: 16px;">One or more items, batch numbers, or product codes do not match the photo data.</span></div>', unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.dataframe(report_df, use_container_width=True)
+
+else:
+    st.info("💡 Right Column me photo upload ya capture karein reconciliation report dekhne ke liye.")
 
 st.markdown("<br><hr><div style='text-align: center; color: #34d399; font-weight: 700;'>⚡ Designed & Developed by Dharmendra Kumar (Mishra)</div>", unsafe_allow_html=True)
